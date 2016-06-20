@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-20 23:20:44 >
+//Time-stamp: < serial_server.c 2016-06-20 23:31:00 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -38,20 +38,21 @@ int read_input(char *in){
 	return strlen(in);
 }
 
+// TCP
 static int create_server_socket(const char *host,const char *port){
 	struct addrinfo hints;
-    struct addrinfo *result, *rp, *ipv4v6bindall;
+    struct addrinfo *result, *rp;
     int s, server_sock;
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family   = AF_UNSPEC;               /* Return IPv4 and IPv6 choices */
-    hints.ai_socktype = SOCK_DGRAM;              /* We want a UDP socket */
+    hints.ai_socktype = SOCK_STREAM;              /* We want a UDP socket */
     hints.ai_flags    = AI_PASSIVE | AI_ADDRCONFIG; /* For wildcard IP address */
-    hints.ai_protocol = IPPROTO_UDP;
+    hints.ai_protocol = IPPROTO_TCP;
 
     s = getaddrinfo(host, port, &hints, &result);
     if (s != 0) {
-        LOGE("[udp] getaddrinfo: %s", gai_strerror(s));
+        LOGE("[tcp] getaddrinfo: %s", gai_strerror(s));
         return -1;
     }
 	rp=result;
@@ -62,11 +63,6 @@ static int create_server_socket(const char *host,const char *port){
             continue;
         }
 
-        if (rp->ai_family == AF_INET6) {
-            int ipv6only = host ? 1 : 0;
-            setsockopt(server_sock, IPPROTO_IPV6, IPV6_V6ONLY, &ipv6only, sizeof(ipv6only));
-        }
-
         int opt = 1;
         setsockopt(server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 		s = bind(server_sock, rp->ai_addr, rp->ai_addrlen);
@@ -74,7 +70,7 @@ static int create_server_socket(const char *host,const char *port){
             /* We managed to bind successfully! */
             break;
         } else {
-            ERROR("[udp] bind");
+            ERROR("[tcp] bind");
         }
 
         close(server_sock);
@@ -96,7 +92,7 @@ void *my_malloc(size_t size) {
 	return tmp;
 }
 
-/* 输入192.168.4.1:3333:xxxx 返回一个ip、端口、data */
+/* 输入192.168.4.1:3333:xxxx 返回一个user_content的指针，使用后记得释放内存 */
 user_content_t *new_user_content_from_str(char *in){
 	char *pch;
 	int offset[2];
@@ -115,6 +111,7 @@ user_content_t *new_user_content_from_str(char *in){
 	user_content_t *tmp=my_malloc(sizeof(user_content_t));
 	tmp->data_size=(strlen(in)-offset[1]);
 	tmp->index=0;
+	tmp->sockfd=-1;
 	tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
 	tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
 	tmp->data=my_malloc(sizeof(char)*tmp->data_size);
@@ -137,28 +134,29 @@ int main(int argc,char *argv[]){
 	char *IP,*PORT;
 	/* 用户态的数据包格式ASCII */
 	user_content_t *my_content=NULL;
+	int sockfd_to_remote;
 	
 	/* if (argc != 3) { */
-		/* fprintf(stderr,"usage: %s ip port\n",argv[0]);  */
-		/* return 1; */
+	/* 	fprintf(stderr,"usage: %s ip port\n",argv[0]); */
+	/* 	return 1; */
 	/* } */
 	
 	/* IP=argv[1]; */
 	/* PORT=argv[2]; */
 	
 	printf("hello\n");
-	while(1){
-		if(read_input(in));
-		my_content=new_user_content_from_str(in);
-		printf("%s,%s,%s\n",my_content->ip,my_content->port,my_content->data);
-		my_free(my_content->ip);
-		my_free(my_content->port);
-		my_free(my_content->data);
-		my_free(my_content);
+
+	if(read_input(in));
+	my_content=new_user_content_from_str(in);
+
+	/* 建立一個 socket： */
+	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+	/* connect! */
+	if(status=(connect(sockfd, res->ai_addr, res->ai_addrlen))<0){
+		perror("connect error");
+		return 1;
 	}
-	
-	/* printf("%d\n",create_server_socket(IP,PORT)); */
-	/* getchar(); */
 	return 0;
 }
 #endif
