@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-20 22:53:07 >
+//Time-stamp: < serial_server.c 2016-06-20 23:20:44 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define MAX_UDP_LENTH 65500
+#define MAX_BUFFER_LENTH 65530
 #define ERROR printf
 #define LOGE printf
 /* 释放内存 */
@@ -21,11 +21,16 @@
         ptr = NULL;								\
     } while(0)
 
+/* 封包用户输入的数据（来自串口），仿照shadowsocks-libev的封装包格式 */
 typedef struct user_content {
+	unsigned short index;
+	unsigned short data_size;
+	int sockfd;						/* sockdet文件描述符 */
 	char *ip;
 	char *port;
 	char *data;
 } user_content_t;
+
 
 int read_input(char *in){
 	int len;
@@ -91,13 +96,12 @@ void *my_malloc(size_t size) {
 	return tmp;
 }
 
-
 /* 输入192.168.4.1:3333:xxxx 返回一个ip、端口、data */
-user_content_t *parse_input_string(char *in){
+user_content_t *new_user_content_from_str(char *in){
 	char *pch;
 	int offset[2];
 	int occurs=0;
-	int data_size;
+	
 	pch=strchr(in,':');
 	while(pch!=NULL){
 		offset[occurs]=pch-in+1;
@@ -106,14 +110,14 @@ user_content_t *parse_input_string(char *in){
 	}
 	if(occurs!=2)
 		return NULL;
-	
-	data_size=(strlen(in)-offset[1]);
 
 	/* 记得释放内存 */
 	user_content_t *tmp=my_malloc(sizeof(user_content_t));
+	tmp->data_size=(strlen(in)-offset[1]);
+	tmp->index=0;
 	tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
 	tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
-	tmp->data=my_malloc(sizeof(char)*data_size);
+	tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
 	memcpy(tmp->ip,in,offset[0]);
 	*(tmp->ip+offset[0]-1)=0;
@@ -121,15 +125,15 @@ user_content_t *parse_input_string(char *in){
 	memcpy(tmp->port,in+offset[0],offset[1]-offset[0]-1);
 	*(tmp->port+offset[1]-1)=0;
 	
-	memcpy(tmp->data,in+offset[1],data_size+1);
-	*(tmp->data+data_size)=0;
+	memcpy(tmp->data,in+offset[1],tmp->data_size+1);
+	*(tmp->data+tmp->data_size)=0;
 
 	return tmp;
 }
 	
 #ifdef SERIAL_MAIN
 int main(int argc,char *argv[]){
-	char in[MAX_UDP_LENTH];
+	char in[MAX_BUFFER_LENTH];
 	char *IP,*PORT;
 	/* 用户态的数据包格式ASCII */
 	user_content_t *my_content=NULL;
@@ -145,13 +149,12 @@ int main(int argc,char *argv[]){
 	printf("hello\n");
 	while(1){
 		if(read_input(in));
-		my_content=parse_input_string(in);
+		my_content=new_user_content_from_str(in);
 		printf("%s,%s,%s\n",my_content->ip,my_content->port,my_content->data);
 		my_free(my_content->ip);
 		my_free(my_content->port);
 		my_free(my_content->data);
 		my_free(my_content);
-		
 	}
 	
 	/* printf("%d\n",create_server_socket(IP,PORT)); */
