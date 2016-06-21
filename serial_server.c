@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-21 10:06:38 >
+//Time-stamp: < serial_server.c 2016-06-21 10:34:43 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -148,7 +148,7 @@ int sendall(int s, user_content_t *in){
 	
 #ifdef SERIAL_MAIN
 int main(int argc,char *argv[]){
-	char in[MAX_BUFFER_LENTH * 20];
+	char in[MAX_BUFFER_LENTH];
 	char *IP,*PORT;
 	/* 用户态的数据包格式ASCII */
 	user_content_t *my_content=NULL;
@@ -171,7 +171,7 @@ int main(int argc,char *argv[]){
 	/* my_content=new_user_content_from_str(in); */
 
 	filefd=open("dd.txt",O_RDWR);
-	byte_readed = read(filefd, in, sizeof(in)-2);
+	byte_readed = read(filefd, in, sizeof(in));
 	printf("%d bytes readed\n",byte_readed);
 	getchar();
 	in[byte_readed]=0;

@@ -28,7 +28,9 @@ int main(int argc, char *argv[]) {
 	int opt = TRUE;
 	int master_socket, addrlen, new_socket, client_socket[MAXCLIENTS], max_clients = MAXCLIENTS,
 		activity, i, valread, sd;
+	int total_recv_bytes[MAXCLIENTS];
 	int max_sd;
+	int filefd;					/* 写入文件描述符 */
 	struct sockaddr_in address;
 	
 
@@ -127,6 +129,7 @@ int main(int argc, char *argv[]) {
 				//if position is empty
 				if (client_socket[i] == 0) {
 					client_socket[i] = new_socket;
+					total_recv_bytes[i]=0;
 					printf("Adding to list of sockets as %d\n", i);
 
 					break;
@@ -144,9 +147,10 @@ int main(int argc, char *argv[]) {
 					//Somebody disconnected , get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
-					printf("Host disconnected , ip %s , port %d \n",
+					printf("\ndisconnected: %s:%d total recv %d bytes \n",
 						   inet_ntoa(address.sin_addr),
-						   ntohs(address.sin_port));
+						   ntohs(address.sin_port),
+						total_recv_bytes[i]);
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
@@ -162,9 +166,10 @@ int main(int argc, char *argv[]) {
 						   valread,
 						   inet_ntoa(address.sin_addr),
 						   ntohs(address.sin_port));
+					total_recv_bytes[i]+=valread;
 					//set the string terminating NULL byte on the end of the data read
 					buffer[valread] = '\0';
-					printf("%s\n",buffer);
+					printf("%s",buffer);
 				}
 			}
 		}
