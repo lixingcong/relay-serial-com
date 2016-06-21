@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	char buffer[MAXLEN];  //data buffer of 1K
 
 	//set of socket descriptors
-	fd_set readfds,writefds;
+	fd_set readfds;
 
 	char *IP,*PORT;
 
@@ -98,7 +98,6 @@ int main(int argc, char *argv[]) {
 	while (TRUE) {
 		//clear the socket set
 		FD_ZERO(&readfds);
-		/* FD_ZERO(&writefds); */
 
 		//add master socket to set
 		FD_SET(master_socket, &readfds);
@@ -178,6 +177,7 @@ int main(int argc, char *argv[]) {
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
+					client_socket[i] = 0;
 					/* now relay to target */
 					memset(&hints, 0, sizeof hints);
 					hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
@@ -194,17 +194,16 @@ int main(int argc, char *argv[]) {
 						perror("connect error");
 						return 1;
 					}
-					if(0==sendall(new_socket,my_contents[i])){
-						close(new_socket);
+					if(0==sendall(new_socket,my_contents[i]))
 						printf("tcp relay ok!\n");
-					}else{
+					else
 						printf("sendall fail.\n");
-					}
+				   
+					close(new_socket);
 					my_free(my_contents[i]->data);
 					/* my_free(my_contents[i]->ip); */
 					/* my_free(my_contents[i]->port); */
 					my_free(my_contents[i]);
-					client_socket[i] = 0;
 				}
 
 				//Echo back the message that came in
