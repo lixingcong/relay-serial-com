@@ -29,7 +29,7 @@ $(OBJS):%.o: %.c
 
 clean:
 	rm -rf $(OBJS)
-	rm -rf main
+	rm -rf main phone serial_server
 
 run:all
 	./main
