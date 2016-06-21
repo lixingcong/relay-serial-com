@@ -1,20 +1,26 @@
 #LDFLAGS=-lserialport
+
 LDFLAGS=
 CFLAGS=
-# OBJS+=serial.o
+DEFINEFLAGS=
+
+ifeq ($(compile),serial)
+	DEFINEFLAGS=-DSERIAL_MAIN
+else ifeq ($(compile),main)
+	DEFINEFLAGS=-DSERVER_MAIN
+endif
+
 OBJS+=main.o
 OBJS+=serial_server.o
 
 all: $(OBJS)
-	$(CC) -o main $^ $(LDFLAGS) -DSERVER_MAIN
+	$(CC) -o main main.o $(LDFLAGS)
+	$(CC) -o serial_server serial_server.o $(LDFLAGS)
 
-serial: serial_server.c
-	$(CC) -o main $^ $(LDFLAGS) -DSERIAL_MAIN
-	
 $(OBJS):%.o: %.c
-	$(CC) -c $< -o $*.o $(LDFLAGS)
+	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
 
-.PHONY: clean run serial 
+.PHONY: clean run
 
 clean:
 	rm -rf $(OBJS)
