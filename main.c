@@ -41,6 +41,16 @@ int main(int argc, char *argv[]) {
 	//set of socket descriptors
 	fd_set readfds;
 
+	char *IP,*PORT;
+
+	if (argc != 3) {
+		fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]);
+		return 1;
+	}
+	
+	IP=argv[1];
+	PORT=argv[2];
+
 	//initialise all client_socket[] to 0 so not checked
 	for (i = 0; i < max_clients; i++) {
 		client_socket[i] = 0;

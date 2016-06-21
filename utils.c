@@ -113,7 +113,6 @@ int sendall(int s, user_content_t *in){
 	int n;
 	while(in->index < in->data_size) {
 		n = send(s, in->data+in->index, in->data_size, 0);
-		printf("send %d bytes\n, now index is %d",n,in->index);//,in->data);
 		/* sleep(0.5); */
 		if (n == -1) { printf("sendall error!\n");break; }
 		in->index += n;

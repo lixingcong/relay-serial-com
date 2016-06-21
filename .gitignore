@@ -1,4 +1,5 @@
 *.o
+.#*
 main
 serial_server
 phone

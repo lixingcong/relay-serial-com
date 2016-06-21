@@ -29,11 +29,12 @@ int main(int argc,char *argv[])
 	fd_set readfds;
 	int master_socket,new_socket,max_fd; /* 文件描述符 */
 	char buffer[MAXLEN];
-	int total_recv_bytes=0,valread; /* 接收到的字节 */
+	int valread; /* 接收到的字节 */
 	int client_num_ctr=0;
 	struct sockaddr_in address;	  /* accept用到 */
 	int addrlen=sizeof(address);				  /* address结构体的长度 */
 	char *IP,*PORT;
+	user_content_t *my_content=NULL; /* 接收的数据 */
 
 	if (argc != 3) {
 		fprintf(stderr,"usage: %s ip port\n",argv[0]);
@@ -54,7 +55,6 @@ int main(int argc,char *argv[])
 		exit(EXIT_FAILURE);
 	}
 	puts("waiting for connections..");
-	
 
 	new_socket=-1;
 	while(1){
@@ -84,18 +84,25 @@ int main(int argc,char *argv[])
 				new_socket, inet_ntoa(address.sin_addr),
 				ntohs(address.sin_port));
 			
+			my_content=my_malloc(sizeof(user_content_t)); /* 接收的数据*/
+			my_content->data_size=0;
+			my_content->data=my_malloc(sizeof(char)*MAXLEN);			
 		}
 		/* data come from clients */
 		if(new_socket>0 && FD_ISSET(new_socket,&readfds)){
 			if ((valread = read(new_socket, buffer,MAXLEN)) == 0) {
-				printf("\n#%d client diconnected!\n",++client_num_ctr);
+				int i;
+				for(i=0;i<my_content->data_size;i++)
+					printf("%c",*(my_content->data+i));
+				printf("\n");
+				printf("\n#%d client diconnected! total_recv is %d\n",++client_num_ctr,my_content->data_size);
 				close(new_socket);
+				my_free(my_content->data);
+				my_free(my_content);
 				new_socket=-1;
-				total_recv_bytes=0;
 			}else{
-				total_recv_bytes+=valread;
-				buffer[valread] = '\0';
-				printf("%s",buffer);
+				memcpy(my_content->data+my_content->data_size,buffer,valread);
+				my_content->data_size+=valread;
 			}
 		}
 		
