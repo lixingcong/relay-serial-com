@@ -17,11 +17,12 @@
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 
+#include "utils.h"
 
 
 #define TRUE   1
 #define FALSE  0
-#define PORT 4000
+#define PORT_LISTEN 4000
 #define MAXLEN 65500			/* 实际上是65535，留余量 */
 #define MAXCLIENTS 10
 
@@ -30,7 +31,7 @@ int main(int argc, char *argv[]) {
 	int opt = TRUE;
 	int master_socket, addrlen, new_socket, client_socket[MAXCLIENTS], max_clients = MAXCLIENTS,
 		activity, i, valread, sd;
-	int total_recv_bytes[MAXCLIENTS];
+	user_content_t *my_contents[MAXCLIENTS];
 	int max_sd;
 	int filefd;					/* 写入文件描述符 */
 	struct sockaddr_in address;
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]) {
 	//type of socket created
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons( PORT);
+	address.sin_port = htons(PORT_LISTEN);
 
 	//bind the socket to localhost port 8888
 	if (bind(master_socket, (struct sockaddr *) &address, sizeof(address))
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
 		perror("bind failed");
 		exit(EXIT_FAILURE);
 	}
-	printf("Listener on port %d \n", PORT);
+	printf("Listener on port %d \n", PORT_LISTEN);
 
 	//try to specify maximum of 3 pending connections for the master socket
 	if (listen(master_socket, 3) < 0) {
@@ -141,7 +142,9 @@ int main(int argc, char *argv[]) {
 				//if position is empty
 				if (client_socket[i] == 0) {
 					client_socket[i] = new_socket;
-					total_recv_bytes[i]=0;
+					my_contents[i]=my_malloc(sizeof(user_content_t));
+					my_contents[i]->data=my_malloc(sizeof(char)*MAXLEN);
+					
 					printf("Adding to list of sockets as %d\n", i);
 
 					break;
@@ -157,15 +160,24 @@ int main(int argc, char *argv[]) {
 				//Check if it was for closing , and also read the incoming message
 				if ((valread = read(sd, buffer,MAXLEN)) == 0) {
 					//Somebody disconnected , get his details and print
+					int j;
+					for(j=0;j<my_contents[i]->data_size;j++)
+						printf("%c",*(my_contents[i]->data+j));
+					printf("\n");
+
+
+					
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
 					printf("\ndisconnected: %s:%d total recv %d bytes \n",
 						   inet_ntoa(address.sin_addr),
 						   ntohs(address.sin_port),
-						total_recv_bytes[i]);
+						my_contents[i]->data_size);
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
+					my_free(my_contents[i]->data);
+					my_free(my_contents[i]);
 					client_socket[i] = 0;
 				}
 
@@ -174,14 +186,15 @@ int main(int argc, char *argv[]) {
 					// get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
-					printf("RECV %d bytes, %s:%d said to me: ",
-						   valread,
-						   inet_ntoa(address.sin_addr),
-						   ntohs(address.sin_port));
-					total_recv_bytes[i]+=valread;
+					/* printf("RECV %d bytes, %s:%d said to me: ", */
+					/* 	   valread, */
+					/* 	   inet_ntoa(address.sin_addr), */
+					/* 	   ntohs(address.sin_port)); */
+					memcpy(my_contents[i]->data+my_contents[i]->data_size,buffer,valread);
+					my_contents[i]->data_size+=valread;
 					//set the string terminating NULL byte on the end of the data read
-					buffer[valread] = '\0';
-					printf("%s",buffer);
+					/* buffer[valread] = '\0'; */
+					/* printf("%s",buffer); */
 				}
 			}
 		}
