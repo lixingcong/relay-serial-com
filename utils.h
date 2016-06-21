@@ -15,6 +15,10 @@
 #include <unistd.h>
 #include <time.h>
 
+/* 数据流方向 */
+#define DIR_TO_PHONE 0
+#define DIR_TO_SERIAL 1
+
 /* 申请内存 */
 void *my_malloc(size_t size);
 /* 释放内存 */
@@ -29,7 +33,7 @@ typedef struct user_content {
 	int index;
 	int data_size;
 	int sockfd;						/* sockdet文件描述符 */
-	int connected;				/* 是否已经连接，类似shadowsocks */
+	int direction;
 	char *ip;
 	char *port;
 	char *data;

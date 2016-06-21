@@ -34,13 +34,15 @@ int main(int argc, char *argv[]) {
 	user_content_t *my_contents[MAXCLIENTS];
 	int max_sd;
 	int filefd;					/* 写入文件描述符 */
+	struct addrinfo hints, *res; /* 连接到target的用到的 */
+	
 	struct sockaddr_in address;
 	
 
 	char buffer[MAXLEN];  //data buffer of 1K
 
 	//set of socket descriptors
-	fd_set readfds;
+	fd_set readfds,writefds;
 
 	char *IP,*PORT;
 
@@ -96,6 +98,7 @@ int main(int argc, char *argv[]) {
 	while (TRUE) {
 		//clear the socket set
 		FD_ZERO(&readfds);
+		/* FD_ZERO(&writefds); */
 
 		//add master socket to set
 		FD_SET(master_socket, &readfds);
@@ -139,10 +142,16 @@ int main(int argc, char *argv[]) {
 
 			//add new socket to array of sockets
 			for (i = 0; i < max_clients; i++) {
-				//if position is empty
+				//if position is empty, create new one
 				if (client_socket[i] == 0) {
 					client_socket[i] = new_socket;
 					my_contents[i]=my_malloc(sizeof(user_content_t));
+					my_contents[i]->index=0;
+					my_contents[i]->direction=DIR_TO_PHONE;
+					//my_contents[i]->ip=my_malloc(sizeof(char)*sizeof(*IP));
+					//my_contents[i]->port=my_malloc(sizeof(char)*sizeof(*PORT));
+					my_contents[i]->ip=IP;
+					my_contents[i]->port=PORT;
 					my_contents[i]->data=my_malloc(sizeof(char)*MAXLEN);
 					
 					printf("Adding to list of sockets as %d\n", i);
@@ -160,13 +169,6 @@ int main(int argc, char *argv[]) {
 				//Check if it was for closing , and also read the incoming message
 				if ((valread = read(sd, buffer,MAXLEN)) == 0) {
 					//Somebody disconnected , get his details and print
-					int j;
-					for(j=0;j<my_contents[i]->data_size;j++)
-						printf("%c",*(my_contents[i]->data+j));
-					printf("\n");
-
-
-					
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
 					printf("\ndisconnected: %s:%d total recv %d bytes \n",
@@ -176,7 +178,31 @@ int main(int argc, char *argv[]) {
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
+					/* now relay to target */
+					memset(&hints, 0, sizeof hints);
+					hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
+					hints.ai_socktype = SOCK_STREAM;
+					hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+					if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) {
+						printf("getaddrinfo error!\n");
+						return 1;
+					}
+					new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+					/* connect! */
+					if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+						perror("connect error");
+						return 1;
+					}
+					if(0==sendall(new_socket,my_contents[i])){
+						close(new_socket);
+						printf("tcp relay ok!\n");
+					}else{
+						printf("sendall fail.\n");
+					}
 					my_free(my_contents[i]->data);
+					/* my_free(my_contents[i]->ip); */
+					/* my_free(my_contents[i]->port); */
 					my_free(my_contents[i]);
 					client_socket[i] = 0;
 				}
@@ -195,6 +221,7 @@ int main(int argc, char *argv[]) {
 					//set the string terminating NULL byte on the end of the data read
 					/* buffer[valread] = '\0'; */
 					/* printf("%s",buffer); */
+					
 				}
 			}
 		}
