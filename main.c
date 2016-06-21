@@ -17,10 +17,12 @@
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 
+
+
 #define TRUE   1
 #define FALSE  0
 #define PORT 4000
-#define MAXLEN 65500
+#define MAXLEN 65500			/* 实际上是65535，留余量 */
 #define MAXCLIENTS 10
 
 #ifdef SERIAL_MAIN

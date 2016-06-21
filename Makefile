@@ -12,10 +12,13 @@ endif
 
 OBJS+=main.o
 OBJS+=serial_server.o
+OBJS+=phone.o
+OBJS+=utils.o
 
 all: $(OBJS)
-	$(CC) -o main main.o $(LDFLAGS)
-	$(CC) -o serial_server serial_server.o $(LDFLAGS)
+	$(CC) -o main main.o utils.o $(LDFLAGS)
+	$(CC) -o phone phone.o utils.o $(LDFLAGS)
+	$(CC) -o serial_server serial_server.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)

@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-21 10:58:13 >
+//Time-stamp: < phone.c 2016-06-21 11:00:07 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
