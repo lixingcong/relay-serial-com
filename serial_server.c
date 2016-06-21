@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-21 10:58:13 >
+//Time-stamp: < serial_server.c 2016-06-21 11:05:02 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -81,10 +81,7 @@ int main(int argc,char *argv[]){
 		return 1;
 	}
 
-	printf("hello form \n");
-
 	if(-1==sendall(sockfd_to_remote,my_content))printf("sendall fail.\n");
-
 	
 	return 0;
 }

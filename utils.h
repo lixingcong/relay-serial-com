@@ -35,11 +35,11 @@ typedef struct user_content {
 	char *data;
 } user_content_t;
 
-/* 输入192.168.4.1:3333:xxxx 返回一个user_content的指针，使用后记得释放内存 */
+/* 输入192.168.4.1:3333:xxxxdataxxxx 返回一个user_content的指针，使用后记得释放内存 */
 user_content_t *new_user_content_from_str(char *in);
 
 // TCP bind, lack of listen
-static int create_server_socket(const char *host,const char *port);
+int create_server_socket(const char *host,const char *port);
 
 /* 将user_content的内容全部发送出去 阻塞操作*/
 int sendall(int s, user_content_t *in);

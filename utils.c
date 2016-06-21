@@ -62,7 +62,7 @@ user_content_t *new_user_content_from_str(char *in){
 
 
 // TCP bind, lack of listen
-static int create_server_socket(const char *host,const char *port){
+int create_server_socket(const char *host,const char *port){
 	struct addrinfo hints;
     struct addrinfo *result, *rp;
     int s, server_sock;

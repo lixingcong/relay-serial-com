@@ -4,8 +4,10 @@ LDFLAGS=
 CFLAGS=
 DEFINEFLAGS=
 
+# serial -----> main ------> phone
 ifeq ($(compile),serial)
 	DEFINEFLAGS=-DSERIAL_MAIN
+# serial <----- main <------ phone
 else ifeq ($(compile),main)
 	DEFINEFLAGS=-DSERVER_MAIN
 endif
