@@ -191,23 +191,21 @@ int main(int argc, char *argv[]) {
 
 					/* connect! */
 					if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+						/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 						perror("connect error");
-						return 1;
+					}else{
+						if(0==sendall(new_socket,my_contents[i]))
+							printf("tcp relay ok!\n");
+						else
+							printf("sendall fail.\n");
 					}
-					if(0==sendall(new_socket,my_contents[i]))
-						printf("tcp relay ok!\n");
-					else
-						printf("sendall fail.\n");
 				   
 					close(new_socket);
 					my_free(my_contents[i]->data);
 					/* my_free(my_contents[i]->ip); */
 					/* my_free(my_contents[i]->port); */
 					my_free(my_contents[i]);
-				}
-
-				//Echo back the message that came in
-				else {
+				}else {
 					// get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
