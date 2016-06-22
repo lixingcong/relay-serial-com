@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
 				buffer_com_data_size+=valread;
 				/* 读完所有数据，串口数据包必须以\r\n结尾 */
 				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
+					printf("- - - - - - - - - -\nread from COM ok\n");
 					buffer_com_p[buffer_com_data_size]=0;
 					/* create relay struct: from serial, to ip */
 					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,DIR_TO_PHONE);
@@ -212,9 +213,9 @@ int main(int argc, char *argv[]) {
 									perror("connect error");
 								}else{
 									if(0==sendall(new_socket,my_contents[MAXCLIENTS]))
-										printf("tcp relay ok!\n");
+										printf("    tcp relay ok!\n");
 									else
-										printf("sendall fail.\n");
+										printf("    sendall fail.\n");
 								}
 								close(new_socket);
 							}
@@ -243,17 +244,12 @@ int main(int argc, char *argv[]) {
 					buffer[i][buffer_data_size[i]]=0;
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
-					printf("\ndisconnected: %s:%d total recv %d bytes \n",
-						   inet_ntoa(address.sin_addr),
-						   ntohs(address.sin_port),
-						buffer_data_size[i]);
+					printf("- - - - - - - - - -\nrecv %d bytes form LAN client\n",buffer_data_size[i]);
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
 					client_socket[i] = 0;
 
-
-			  #ifdef SERVER_MAIN
 					/* convert port(interger) to char* */
 					sprintf(itoa_buffer,"%d",ntohs(address.sin_port));
 					header=get_header_ipv4(inet_ntoa(address.sin_addr), itoa_buffer);
@@ -269,11 +265,11 @@ int main(int argc, char *argv[]) {
 						if(strcmp(my_contents[i]->device,com_devicename)!=0){
 							printf("not such COM device: %s\n",my_contents[i]->device);
 						}else{
-							puts(my_contents[i]->data);
+							printf("  %s    ----> %s\n",my_contents[i]->data,my_contents[i]->device);
 							if(sp_blocking_write(my_com_conf->port,my_contents[i]->data,my_contents[i]->data_size,500)<0)
-								printf("write to %s fail!\n",my_contents[i]->device);
+								printf("    write to %s fail!\n",my_contents[i]->device);
 							else
-								printf("write to com ok!\n");
+								printf("    write COM ok!\n");
 						}
 						/* now relay to serial */
 						my_free(my_contents[i]->data);
@@ -281,20 +277,9 @@ int main(int argc, char *argv[]) {
 						my_free(my_contents[i]);
 					}
 						
-              #endif
 				}else {
-					// get his details and print
-					/* getpeername(sd, (struct sockaddr*) &address, */
-								/* (socklen_t*) &addrlen); */
-					/* printf("RECV %d bytes, %s:%d said to me: ", */
-					/* 	   valread, */
-					/* 	   inet_ntoa(address.sin_addr), */
-					/* 	   ntohs(address.sin_port)); */
+					/* 累加数据 */
 					buffer_data_size[i]+=valread;
-					//set the string terminating NULL byte on the end of the data read
-					/* buffer[valread] = '\0'; */
-					/* printf("%s",buffer); */
-					
 				}
 			}
 		}

@@ -30,24 +30,30 @@ int main(int argc,char *argv[])
 	char buffer[MAXLEN];		/* 接收数据缓冲器 */
 	int master_socket,new_socket,max_fd; /* 文件描述符 */
 	char *IP,*PORT;				/* socket发送或者监听地址 */
-
+	if (argc != 3) {
+		#ifdef SERVER_MAIN
+		fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]);
+		#endif
+		#ifdef SERIAL_MAIN
+		fprintf(stderr,"usage: %s listen-ip listen-port\n",argv[0]);
+		#endif
+		return 1;
+	}
+	
+	IP=argv[1];
+	PORT=argv[2];
 
 #ifdef SERVER_MAIN
 	int filefd,byte_readed;
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_in address;
 
-	if (argc != 3) {
-		fprintf(stderr,"usage: %s ip port\n",argv[0]);
-		return 1;
-	}
-	
-	IP=argv[1];
-	PORT=argv[2];
-	
+
 	while(1){
 		printf("input a str to send to a device\n");
-		scanf("%s",buffer);
+		/* scanf 默认将空格视为分隔符，不能发送 */
+		/* scanf("%s",buffer); */
+		fgets(buffer,MAXLEN,stdin);
 		my_content=new_user_content_from_str(buffer,"",DIR_TO_SERVER);
 		if(my_content==NULL){
 			printf("invalid packet!\n");

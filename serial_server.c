@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-22 23:02:52 >
+//Time-stamp: < serial_server.c 2016-06-23 00:44:44 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -68,7 +68,7 @@ void close_com(struct sp_port *port_blue,struct sp_port_config *port_blue_config
 	sp_free_config(port_blue_config);
 }
 
-// 过时的宏定义
+// 过时的宏定义,仅用与测试模拟一个串口设备调试
 #ifdef SERIAL_MAIN_OLD
 int main(int argc,char *argv[]){
 	char in[MAX_BUFFER_LENTH];
