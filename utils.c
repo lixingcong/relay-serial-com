@@ -55,8 +55,8 @@ user_content_t *new_user_content_from_str(char *in,int direction){
 		memcpy(tmp->ip,in,offset[0]-1);
 		*(tmp->ip+offset[0]-1)=0;
 
-		memcpy(tmp->port,in+offset[0],offset[1]-offset[0]-1);
-		*(tmp->port+offset[1]-1)=0;
+		memcpy(tmp->port,in+offset[0],offset[1]-offset[0]);
+		*(tmp->port+offset[1]-offset[0]-1)=0;
 	
 		memcpy(tmp->data,in+offset[1],tmp->data_size+1);
 		*(tmp->data+tmp->data_size)=0;

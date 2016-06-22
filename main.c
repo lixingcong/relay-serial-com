@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	int opt = TRUE;
 	int master_socket, addrlen, new_socket, client_socket[MAXCLIENTS], max_clients = MAXCLIENTS,
 		activity, i, valread, sd;
-	user_content_t *my_contents[MAXCLIENTS];
+	user_content_t *my_contents[MAXCLIENTS+1];
 	int max_sd;
 	
 	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
@@ -53,15 +53,15 @@ int main(int argc, char *argv[]) {
 	//set of socket descriptors
 	fd_set readfds;
 
-	char *IP,*PORT;
+	/* char *IP,*PORT; */
 
-	if (argc != 3) {
-		fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]);
-		return 1;
-	}
+	/* if (argc != 3) { */
+		/* fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]); */
+		/* return 1; */
+	/* } */
 	
-	IP=argv[1];
-	PORT=argv[2];
+	/* IP=argv[1]; */
+	/* PORT=argv[2]; */
 
 	/* 打开串口，须root权限 */
 	if(NULL==(my_com_conf=open_com(com_devicename))){
@@ -187,6 +187,45 @@ int main(int argc, char *argv[]) {
 				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
 					buffer_com_p[buffer_com_data_size]=0;
 					printf("%s",buffer_com_p);
+					/* create relay struct: from serial, to ip */
+					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,DIR_TO_PHONE);
+					if(!my_contents[MAXCLIENTS]){
+						printf("invalid packet!\n");
+					}else{
+						// 输入合法性只能在打开远程ip时候判断！
+						puts(my_contents[MAXCLIENTS]->data);
+						/* now relay to target : to LAN ip */
+						memset(&hints, 0, sizeof hints);
+						hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
+						hints.ai_socktype = SOCK_STREAM;
+						hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+
+						if (getaddrinfo(my_contents[MAXCLIENTS]->ip, my_contents[MAXCLIENTS]->port, &hints, &res) != 0) {
+						/* if (getaddrinfo("127.0.0.1", "4002", &hints, &res) != 0) { */
+							printf("getaddrinfo error!\n");
+							/* return 1; */
+						}else{
+							if((new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
+								/* connect! */
+								if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+									/* 这里应该返回结果 告诉来源：目标拒绝连接 */
+									perror("connect error");
+								}else{
+									if(0==sendall(new_socket,my_contents[MAXCLIENTS]))
+										printf("tcp relay ok!\n");
+									else
+										printf("sendall fail.\n");
+								}
+								close(new_socket);
+							}
+							
+						}
+						my_free(my_contents[MAXCLIENTS]->ip);
+						my_free(my_contents[MAXCLIENTS]->port);
+						my_free(my_contents[MAXCLIENTS]->data);
+						my_free(my_contents[MAXCLIENTS]);
+					}
+					/* reset buffer offset */
 					buffer_com_data_size=0;
 					buffer_com_p=buffer_com;					
 				}
@@ -213,44 +252,6 @@ int main(int argc, char *argv[]) {
 					close(sd);
 					client_socket[i] = 0;
 
-              #ifdef SERIAL_MAIN
-					/* create relay struct: from serial, to ip */
-					my_contents[i]=new_user_content_from_str(buffer[i],DIR_TO_PHONE);
-					if(!my_contents[i]){
-						printf("invalid packet!\n");
-					}else{
-						// 输入合法性只能在打开远程ip时候判断！
-						puts(my_contents[i]->data);
-						/* now relay to target : to LAN ip */
-						memset(&hints, 0, sizeof hints);
-						hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
-						hints.ai_socktype = SOCK_STREAM;
-						hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-						if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) {
-							printf("getaddrinfo error!\n");
-							return 1;
-						}else{
-							if((new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
-								/* connect! */
-								if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
-									/* 这里应该返回结果 告诉来源：目标拒绝连接 */
-									perror("connect error");
-								}else{
-									if(0==sendall(new_socket,my_contents[i]))
-										printf("tcp relay ok!\n");
-									else
-										printf("sendall fail.\n");
-								}
-								close(new_socket);
-							}
-							
-						}
-						my_free(my_contents[i]->ip);
-						my_free(my_contents[i]->port);
-						my_free(my_contents[i]->data);
-						my_free(my_contents[i]);
-					}
-              #endif
 
 			  #ifdef SERVER_MAIN
 					/* create relay struct: from LAN ip, to serial */

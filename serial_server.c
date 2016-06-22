@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-22 22:33:11 >
+//Time-stamp: < serial_server.c 2016-06-22 23:02:52 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -15,7 +15,6 @@
 #include <time.h>
 #include "serial_server.h"
 
-#define MAX_BUFFER_LENTH 65500
 
 com_port_t *open_com(char *devicename){
 	com_port_t *tmp=my_malloc(sizeof(com_port_t));
@@ -68,8 +67,9 @@ void close_com(struct sp_port *port_blue,struct sp_port_config *port_blue_config
 	sp_free_port(port_blue);
 	sp_free_config(port_blue_config);
 }
-	
-#ifdef SERIAL_MAIN
+
+// 过时的宏定义
+#ifdef SERIAL_MAIN_OLD
 int main(int argc,char *argv[]){
 	char in[MAX_BUFFER_LENTH];
 	char *IP,*PORT;
