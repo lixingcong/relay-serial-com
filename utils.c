@@ -28,7 +28,7 @@ void *my_malloc(size_t size) {
    输入/dev/ttyUSB0:xxxx
    返回一个user_content的指针，使用后记得释放内存 
 */
-user_content_t *new_user_content_from_str(char *in, int direction){
+user_content_t *new_user_content_from_str(char *in,int direction){
 	char *pch;
 	int offset[2];
 	int occurs=0;
@@ -61,7 +61,7 @@ user_content_t *new_user_content_from_str(char *in, int direction){
 	
 		memcpy(tmp->data,in+offset[1],tmp->data_size+1);
 		*(tmp->data+tmp->data_size)=0;
-	}else{
+	}else if(direction==DIR_TO_SERIAL){
 		pch=strchr(in,':');
 		if(pch!=NULL)
 			offset[occurs]=pch-in+1;
@@ -80,6 +80,16 @@ user_content_t *new_user_content_from_str(char *in, int direction){
 		*(tmp->device+offset[0]-1)=0;
 
 		memcpy(tmp->data,in+offset[0],tmp->data_size+1);
+		*(tmp->data+tmp->data_size)=0;
+	}else{// to server
+		/* 记得释放内存 */
+		tmp=my_malloc(sizeof(user_content_t));
+		tmp->data_size=(strlen(in));
+		tmp->index=0;
+		tmp->sockfd=-1;
+		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
+
+		memcpy(tmp->data,in,tmp->data_size);
 		*(tmp->data+tmp->data_size)=0;
 	}
 

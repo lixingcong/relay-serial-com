@@ -27,7 +27,7 @@
 #define FALSE  0
 #define PORT_LISTEN 4000
 #define MAXLEN 65500			/* 实际上是65535，留余量 */
-#define MAXCLIENTS 10
+#define MAXCLIENTS 5
 
 #ifdef SERIAL_MAIN
 int main(int argc, char *argv[]) {
@@ -38,12 +38,13 @@ int main(int argc, char *argv[]) {
 	int max_sd;
 	int filefd;					/* 写入文件描述符 */
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
-	
 	struct sockaddr_in address;
 	
-
-	char buffer[MAXLEN];  //data buffer of 1K
-
+	/* 每个客户端的缓冲区和索引 */
+	char buffer[MAXCLIENTS][MAXLEN];
+	char *buffer_p[MAXCLIENTS];  //data buffer of 1K
+	int buffer_data_size[MAXCLIENTS];
+	
 	//set of socket descriptors
 	fd_set readfds;
 
@@ -147,17 +148,12 @@ int main(int argc, char *argv[]) {
 				//if position is empty, create new one
 				if (client_socket[i] == 0) {
 					client_socket[i] = new_socket;
-					my_contents[i]=my_malloc(sizeof(user_content_t));
-					my_contents[i]->index=0;
-					my_contents[i]->direction=DIR_TO_PHONE;
-					//my_contents[i]->ip=my_malloc(sizeof(char)*sizeof(*IP));
-					//my_contents[i]->port=my_malloc(sizeof(char)*sizeof(*PORT));
-					my_contents[i]->ip=IP;
-					my_contents[i]->port=PORT;
-					my_contents[i]->data=my_malloc(sizeof(char)*MAXLEN);
+					// 初始化buffer
+					buffer_p[i]=buffer[i];
+					memset(buffer_p[i],0,MAXLEN);
+					buffer_data_size[i]=0;
 					
 					printf("Adding to list of sockets as %d\n", i);
-
 					break;
 				}
 			}
@@ -169,45 +165,46 @@ int main(int argc, char *argv[]) {
 
 			if (FD_ISSET(sd, &readfds)) {
 				//Check if it was for closing , and also read the incoming message
-				if ((valread = read(sd, buffer,MAXLEN)) == 0) {
+				if ((valread = read(sd, buffer_p[i]+buffer_data_size[i],MAXLEN)) == 0) {
+					buffer[i][buffer_data_size[i]]=0;
+					puts(buffer[i]);
 					//Somebody disconnected , get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
 					printf("\ndisconnected: %s:%d total recv %d bytes \n",
 						   inet_ntoa(address.sin_addr),
 						   ntohs(address.sin_port),
-						my_contents[i]->data_size);
+						buffer_data_size[i]);
+
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
 					client_socket[i] = 0;
 					/* now relay to target */
-					memset(&hints, 0, sizeof hints);
-					hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
-					hints.ai_socktype = SOCK_STREAM;
-					hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-					if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) {
-						printf("getaddrinfo error!\n");
-						return 1;
-					}
-					new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+					/* memset(&hints, 0, sizeof hints); */
+					/* hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本 */
+					/* hints.ai_socktype = SOCK_STREAM; */
+					/* hints.ai_flags = AI_PASSIVE; // fill in my IP for me */
+					/* if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) { */
+					/* 	printf("getaddrinfo error!\n"); */
+					/* 	return 1; */
+					/* } */
+					/* new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol); */
 
-					/* connect! */
-					if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
-						/* 这里应该返回结果 告诉来源：目标拒绝连接 */
-						perror("connect error");
-					}else{
-						if(0==sendall(new_socket,my_contents[i]))
-							printf("tcp relay ok!\n");
-						else
-							printf("sendall fail.\n");
-					}
+					/* /\* connect! *\/ */
+					/* if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){ */
+					/* 	/\* 这里应该返回结果 告诉来源：目标拒绝连接 *\/ */
+					/* 	perror("connect error"); */
+					/* }else{ */
+					/* 	if(0==sendall(new_socket,my_contents[i])) */
+					/* 		printf("tcp relay ok!\n"); */
+					/* 	else */
+					/* 		printf("sendall fail.\n"); */
+					/* } */
 				   
-					close(new_socket);
-					my_free(my_contents[i]->data);
-					/* my_free(my_contents[i]->ip); */
-					/* my_free(my_contents[i]->port); */
-					my_free(my_contents[i]);
+					/* close(new_socket); */
+					/* my_free(my_contents[i]->data); */
+					/* my_free(my_contents[i]); */
 				}else {
 					// get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
@@ -216,8 +213,7 @@ int main(int argc, char *argv[]) {
 					/* 	   valread, */
 					/* 	   inet_ntoa(address.sin_addr), */
 					/* 	   ntohs(address.sin_port)); */
-					memcpy(my_contents[i]->data+my_contents[i]->data_size,buffer,valread);
-					my_contents[i]->data_size+=valread;
+					buffer_data_size[i]+=valread;
 					//set the string terminating NULL byte on the end of the data read
 					/* buffer[valread] = '\0'; */
 					/* printf("%s",buffer); */

@@ -18,6 +18,7 @@
 /* 数据流方向 */
 #define DIR_TO_PHONE 0
 #define DIR_TO_SERIAL 1
+#define DIR_TO_SERVER 2
 
 /* 申请内存 */
 void *my_malloc(size_t size);

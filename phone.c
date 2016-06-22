@@ -22,20 +22,14 @@
 #define MAXLEN 65500			/* 实际上是65535，留余量 */
 
 
-#ifdef SERIAL_MAIN
+
 
 int main(int argc,char *argv[])
 {
-	fd_set readfds;
-	int master_socket,new_socket,max_fd; /* 文件描述符 */
-	char buffer[MAXLEN];
-	int valread; /* 接收到的字节 */
-	int client_num_ctr=0;
-	struct sockaddr_in address;	  /* accept用到 */
-	int addrlen=sizeof(address);				  /* address结构体的长度 */
-	char *IP,*PORT;
 	user_content_t *my_content=NULL; /* 接收的数据 */
-
+	char buffer[MAXLEN];		/* 接收数据缓冲器 */
+	int master_socket,new_socket,max_fd; /* 文件描述符 */
+	char *IP,*PORT;				/* socket发送或者监听地址 */
 	if (argc != 3) {
 		fprintf(stderr,"usage: %s ip port\n",argv[0]);
 		return 1;
@@ -43,6 +37,57 @@ int main(int argc,char *argv[])
 	
 	IP=argv[1];
 	PORT=argv[2];
+
+
+#ifdef SERVER_MAIN
+	int filefd,byte_readed;
+	struct addrinfo hints, *res; /* 连接到target的用到的 */
+	struct sockaddr_in address;
+	
+	while(1){
+		filefd=open("dd.txt",O_RDWR);
+		byte_readed = read(filefd, buffer, sizeof(buffer));
+		/* printf("input a str to send to a device\n"); */
+		/* scanf("%s",buffer); */
+		my_content=new_user_content_from_str(buffer,DIR_TO_SERVER);
+		printf("%s\n",my_content->data);
+		
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+		if (getaddrinfo(IP, PORT, &hints, &res) != 0) {
+			printf("getaddrinfo error!\n");
+			return 1;
+		}
+		new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+		/* connect! */
+		if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+			/* 这里应该返回结果 告诉来源：目标拒绝连接 */
+			perror("connect error");
+		}else{
+			if(0==sendall(new_socket,my_content))
+				printf("tcp send ok!\n");
+			else
+				printf("sendall fail.\n");
+		}
+
+
+		my_free(my_content->data);
+		my_free(my_content);
+		close(new_socket);
+		break;
+	}
+	
+	return 0;
+#endif
+#ifdef SERIAL_MAIN
+	fd_set readfds;
+	int valread; /* 接收到的字节 */
+	int client_num_ctr=0;		/* 客户端counter数 */
+	struct sockaddr_in address;	  /* accept用到 */
+	int addrlen=sizeof(address);				  /* address结构体的长度 */
 
 	if((master_socket=create_server_socket(IP,PORT))<0){
 		printf("error create socket fd\n");
@@ -107,28 +152,6 @@ int main(int argc,char *argv[])
 		}
 		
 	}
-
+#endif
 	return 0;
 }
-
-
-#endif
-
-
-#ifdef SERVER_MAIN
-int main(){
-    char in[100];
-	user_content_t *my_content;
-	while(1){
-		printf("input a str to parse:\n");
-		scanf("%s",in);
-		my_content=new_user_content_from_str(in,DIR_TO_SERIAL);
-		printf("%s,%s\n",my_content->device,my_content->data);
-		my_free(my_content->device);
-		my_free(my_content->data);
-		my_free(my_content);
-	}
-    return 0;
-}
-
-#endif
