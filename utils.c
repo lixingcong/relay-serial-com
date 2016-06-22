@@ -24,38 +24,65 @@ void *my_malloc(size_t size) {
 	return tmp;
 }
 
-/* 输入192.168.4.1:3333:xxxx 返回一个user_content的指针，使用后记得释放内存 */
-user_content_t *new_user_content_from_str(char *in){
+/* 输入192.168.4.1:3333:xxxx 
+   输入/dev/ttyUSB0:xxxx
+   返回一个user_content的指针，使用后记得释放内存 
+*/
+user_content_t *new_user_content_from_str(char *in, int direction){
 	char *pch;
 	int offset[2];
 	int occurs=0;
+	user_content_t *tmp;
+
+	if(direction==DIR_TO_PHONE){
+		pch=strchr(in,':');
+		while(pch!=NULL){
+			offset[occurs]=pch-in+1;
+			if((++occurs)==2)break;
+			pch=strchr(pch+1,':');
+		}
+		if(occurs!=2)
+			return NULL;
+
+		/* 记得释放内存 */
+		tmp=my_malloc(sizeof(user_content_t));
+		tmp->data_size=(strlen(in)-offset[1]);
+		tmp->index=0;
+		tmp->sockfd=-1;
+		tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
+		tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
+		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
+
+		memcpy(tmp->ip,in,offset[0]-1);
+		*(tmp->ip+offset[0]-1)=0;
+
+		memcpy(tmp->port,in+offset[0],offset[1]-offset[0]-1);
+		*(tmp->port+offset[1]-1)=0;
 	
-	pch=strchr(in,':');
-	while(pch!=NULL){
-		offset[occurs]=pch-in+1;
-		if((++occurs)==2)break;
-		pch=strchr(pch+1,':');
+		memcpy(tmp->data,in+offset[1],tmp->data_size+1);
+		*(tmp->data+tmp->data_size)=0;
+	}else{
+		pch=strchr(in,':');
+		if(pch!=NULL)
+			offset[occurs]=pch-in+1;
+		else
+			return NULL;
+
+		/* 记得释放内存 */
+		tmp=my_malloc(sizeof(user_content_t));
+		tmp->data_size=(strlen(in)-offset[0]);
+		tmp->index=0;
+		tmp->sockfd=-1;
+		tmp->device=my_malloc(sizeof(char)*(offset[0]-1));
+		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
+
+		memcpy(tmp->device,in,offset[0]-1);
+		*(tmp->device+offset[0]-1)=0;
+
+		memcpy(tmp->data,in+offset[0],tmp->data_size+1);
+		*(tmp->data+tmp->data_size)=0;
 	}
-	if(occurs!=2)
-		return NULL;
 
-	/* 记得释放内存 */
-	user_content_t *tmp=my_malloc(sizeof(user_content_t));
-	tmp->data_size=(strlen(in)-offset[1]);
-	tmp->index=0;
-	tmp->sockfd=-1;
-	tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
-	tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
-	tmp->data=my_malloc(sizeof(char)*tmp->data_size);
-
-	memcpy(tmp->ip,in,offset[0]);
-	*(tmp->ip+offset[0]-1)=0;
-
-	memcpy(tmp->port,in+offset[0],offset[1]-offset[0]-1);
-	*(tmp->port+offset[1]-1)=0;
-	
-	memcpy(tmp->data,in+offset[1],tmp->data_size+1);
-	*(tmp->data+tmp->data_size)=0;
 
 	return tmp;
 }

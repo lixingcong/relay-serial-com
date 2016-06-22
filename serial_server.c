@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-21 15:44:41 >
+//Time-stamp: < serial_server.c 2016-06-22 13:56:03 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -17,13 +17,16 @@
 #include "utils.h"
 
 #define MAX_BUFFER_LENTH 65500
-
+#ifdef SERVER_MAIN
+#define SERIAL_MAIN
+#endif
 
 int read_input(char *in){
 	int len;
 	scanf("%s",in);
 	return strlen(in);
 }
+
 
 	
 #ifdef SERIAL_MAIN

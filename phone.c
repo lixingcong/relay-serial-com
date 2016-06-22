@@ -113,3 +113,22 @@ int main(int argc,char *argv[])
 
 
 #endif
+
+
+#ifdef SERVER_MAIN
+int main(){
+    char in[100];
+	user_content_t *my_content;
+	while(1){
+		printf("input a str to parse:\n");
+		scanf("%s",in);
+		my_content=new_user_content_from_str(in,DIR_TO_SERIAL);
+		printf("%s,%s\n",my_content->device,my_content->data);
+		my_free(my_content->device);
+		my_free(my_content->data);
+		my_free(my_content);
+	}
+    return 0;
+}
+
+#endif

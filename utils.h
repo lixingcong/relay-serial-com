@@ -34,13 +34,14 @@ typedef struct user_content {
 	int data_size;
 	int sockfd;						/* sockdet文件描述符 */
 	int direction;
+	char *device;				/* 串口 蓝牙 设备名称 */
 	char *ip;
 	char *port;
 	char *data;
 } user_content_t;
 
 /* 输入192.168.4.1:3333:xxxxdataxxxx 返回一个user_content的指针，使用后记得释放内存 */
-user_content_t *new_user_content_from_str(char *in);
+user_content_t *new_user_content_from_str(char *in, int direction);
 
 // TCP bind, lack of listen
 int create_server_socket(const char *host,const char *port);

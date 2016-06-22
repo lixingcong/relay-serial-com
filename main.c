@@ -19,6 +19,9 @@
 
 #include "utils.h"
 
+#ifdef SERVER_MAIN
+#define SERIAL_MAIN
+#endif
 
 #define TRUE   1
 #define FALSE  0
@@ -228,3 +231,4 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 #endif
+

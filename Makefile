@@ -6,10 +6,11 @@ DEFINEFLAGS=
 
 # serial -----> main ------> phone
 ifeq ($(compile),serial)
-	DEFINEFLAGS=-DSERIAL_MAIN
+	DEFINEFLAGS+=-DSERIAL_MAIN
+endif
 # serial <----- main <------ phone
-else ifeq ($(compile),main)
-	DEFINEFLAGS=-DSERVER_MAIN
+ifeq ($(compile),main)
+	DEFINEFLAGS+=-DSERVER_MAIN
 endif
 
 OBJS+=main.o
