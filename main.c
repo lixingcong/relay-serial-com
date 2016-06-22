@@ -38,6 +38,8 @@ int main(int argc, char *argv[]) {
 	com_port_t *my_com_conf;/* 串口配置 */
 	char buffer_com[MAXLEN];	/* 串口缓冲区 */
 	char *buffer_com_p=buffer_com;
+	char *header=NULL;			/* 封包的header */
+	char itoa_buffer[8];
 	int buffer_com_data_size=0;
 	
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
@@ -187,12 +189,12 @@ int main(int argc, char *argv[]) {
 				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
 					buffer_com_p[buffer_com_data_size]=0;
 					/* create relay struct: from serial, to ip */
-					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,DIR_TO_PHONE);
+					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,DIR_TO_PHONE);
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
 						// 输入合法性只能在打开远程ip时候判断！
-						puts(my_contents[MAXCLIENTS]->data);
+						printf("  %s    ---->  %s:%s\n",my_contents[MAXCLIENTS]->data,my_contents[MAXCLIENTS]->ip,my_contents[MAXCLIENTS]->port);
 						/* now relay to target : to LAN ip */
 						memset(&hints, 0, sizeof hints);
 						hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
@@ -252,15 +254,28 @@ int main(int argc, char *argv[]) {
 
 
 			  #ifdef SERVER_MAIN
+					/* convert port(interger) to char* */
+					sprintf(itoa_buffer,"%d",ntohs(address.sin_port));
+					header=get_header_ipv4(inet_ntoa(address.sin_addr), itoa_buffer);
 					/* create relay struct: from LAN ip, to serial */
-					my_contents[i]=new_user_content_from_str(buffer[i],DIR_TO_SERIAL);
+					my_contents[i]=new_user_content_from_str(buffer[i],header,DIR_TO_SERIAL);
+					my_free(header);
+					
 					if(!my_contents[i]){
 						printf("invalid packet!\n");					
 					}else{
 						// 输入合法性只能在打开串口时候判断！
-						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备						
+						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备
+						if(strcmp(my_contents[i]->device,com_devicename)!=0){
+							printf("not such COM device: %s\n",my_contents[i]->device);
+						}else{
+							puts(my_contents[i]->data);
+							if(sp_blocking_write(my_com_conf->port,my_contents[i]->data,my_contents[i]->data_size,500)<0)
+								printf("write to %s fail!\n",my_contents[i]->device);
+							else
+								printf("write to com ok!\n");
+						}
 						/* now relay to serial */
-						puts(my_contents[i]->data);
 						my_free(my_contents[i]->data);
 						my_free(my_contents[i]->device);
 						my_free(my_contents[i]);

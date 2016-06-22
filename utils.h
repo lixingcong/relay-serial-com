@@ -30,7 +30,7 @@ void *my_malloc(size_t size);
         ptr = NULL;								\
     } while(0)
 
-/* 封包用户输入的数据（来自串口），仿照shadowsocks-libev的封装包格式 */
+/* 封包用户输入的数据，仿照shadowsocks-libev的封装包格式 */
 typedef struct user_content {
 	int index;		  /* 已发送字节索引 */
 	int data_size;				/* data包的大小 */
@@ -49,5 +49,8 @@ int create_server_socket(const char *host,const char *port);
 
 /* 将user_content的内容全部发送出去 阻塞操作*/
 int sendall(int s, user_content_t *in);
+
+/* 将ip和port封包 */
+char *get_header_ipv4(char *ip,char *port);
 
 #endif

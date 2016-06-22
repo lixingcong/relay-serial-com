@@ -47,7 +47,7 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
-		tmp->data_size=(strlen(in)-offset[1]+header_len+2);
+		tmp->data_size=(strlen(in)-offset[1]+header_len+2);//额外包含一个':'和结束符'\0'
 		tmp->index=0;
 		tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
 		tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
@@ -71,17 +71,19 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
-		tmp->data_size=(strlen(in)-offset[0]);
+		tmp->data_size=(strlen(in)-offset[0]+header_len+2);//额外包含一个':'和结束符'\0'
 		tmp->index=0;
-
+ 
 		tmp->device=my_malloc(sizeof(char)*(offset[0]-1));
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
 		memcpy(tmp->device,in,offset[0]-1);
 		*(tmp->device+offset[0]-1)=0;
 
-		memcpy(tmp->data,in+offset[0],tmp->data_size+1);
-		*(tmp->data+tmp->data_size)=0;
+		memcpy(tmp->data,header,header_len);
+		*(tmp->data+header_len)=':';
+		memcpy(tmp->data+header_len+1,in+offset[0],tmp->data_size-header_len);
+		
 	}else{// to server
 		// 输入合法性只能在服务端判断！
 		/* 记得释放内存 */
@@ -157,4 +159,15 @@ int sendall(int s, user_content_t *in){
 		in->index += n;
 	}
 	return n==-1?-1:0; // 失敗時傳回 -1、成功時傳回 0
+}
+
+char *get_header_ipv4(char *ip,char *port){
+	int len1=strlen(ip);
+	int len2=strlen(port);
+	char *tmp=my_malloc(sizeof(char)*(len1+len2+2));
+	memcpy(tmp,ip,len1);
+	*(tmp+len1)=':';
+	memcpy(tmp+len1+1,port,len2);
+	*(tmp+len1+len2+1)=0;
+	return tmp;
 }
