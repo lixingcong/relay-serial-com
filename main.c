@@ -22,7 +22,6 @@
 
 #define TRUE   1
 #define FALSE  0
-#define PORT_LISTEN 4000
 #define MAXLEN 65500			/* 实际上是65535，留余量 */
 #define MAXCLIENTS 5
 
@@ -55,15 +54,14 @@ int main(int argc, char *argv[]) {
 	//set of socket descriptors
 	fd_set readfds;
 
-	/* char *IP,*PORT; */
+	char *PORT;
 
-	/* if (argc != 3) { */
-		/* fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]); */
-		/* return 1; */
-	/* } */
+	if (argc != 2) {
+		fprintf(stderr,"usage: %s listen-port\n",argv[0]);
+		return 1;
+	}
 	
-	/* IP=argv[1]; */
-	/* PORT=argv[2]; */
+	PORT=argv[1];
 
 	/* 打开串口，须root权限 */
 	if(NULL==(my_com_conf=open_com(com_devicename))){
@@ -76,10 +74,9 @@ int main(int argc, char *argv[]) {
 		client_socket[i] = 0;
 	}
 
-	//create a master socket
-	if ((master_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
-		perror("socket failed");
-		exit(EXIT_FAILURE);
+	if((master_socket=create_server_socket("0.0.0.0",PORT))<0){
+		printf("error create socket fd\n");
+		return 1;
 	}
 
 	//set master socket to allow multiple connections , this is just a good habit, it will work without this
@@ -89,25 +86,13 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 
-	//type of socket created
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(PORT_LISTEN);
-
-	//bind the socket to localhost port 8888
-	if (bind(master_socket, (struct sockaddr *) &address, sizeof(address))
-		< 0) {
-		perror("bind failed");
-		exit(EXIT_FAILURE);
-	}
-	printf("Listener on port %d \n", PORT_LISTEN);
-
 	//try to specify maximum of 3 pending connections for the master socket
 	if (listen(master_socket, 3) < 0) {
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-
+	printf("Listening on port %s \n", PORT);
+	
 	//accept the incoming connection
 	addrlen = sizeof(address);
 	puts("Waiting for connections ...");
