@@ -167,7 +167,6 @@ int main(int argc, char *argv[]) {
 				//Check if it was for closing , and also read the incoming message
 				if ((valread = read(sd, buffer_p[i]+buffer_data_size[i],MAXLEN)) == 0) {
 					buffer[i][buffer_data_size[i]]=0;
-					puts(buffer[i]);
 					//Somebody disconnected , get his details and print
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
@@ -176,11 +175,13 @@ int main(int argc, char *argv[]) {
 						   ntohs(address.sin_port),
 						buffer_data_size[i]);
 
-
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
 					client_socket[i] = 0;
-					/* now relay to target */
+					/* create relay struct: from ip, to serial */
+					my_contents[i]=new_user_content_from_str(buffer[i],DIR_TO_SERIAL);
+					
+					/* now relay to target : to ip*/
 					/* memset(&hints, 0, sizeof hints); */
 					/* hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本 */
 					/* hints.ai_socktype = SOCK_STREAM; */
@@ -201,10 +202,14 @@ int main(int argc, char *argv[]) {
 					/* 	else */
 					/* 		printf("sendall fail.\n"); */
 					/* } */
+
+					/* now relay to serial */
+					puts(my_contents[i]->data);
 				   
-					/* close(new_socket); */
-					/* my_free(my_contents[i]->data); */
-					/* my_free(my_contents[i]); */
+					close(new_socket);
+					my_free(my_contents[i]->data);
+					my_free(my_contents[i]->device);
+					my_free(my_contents[i]);
 				}else {
 					// get his details and print
 					getpeername(sd, (struct sockaddr*) &address,

@@ -45,10 +45,8 @@ int main(int argc,char *argv[])
 	struct sockaddr_in address;
 	
 	while(1){
-		filefd=open("dd.txt",O_RDWR);
-		byte_readed = read(filefd, buffer, sizeof(buffer));
-		/* printf("input a str to send to a device\n"); */
-		/* scanf("%s",buffer); */
+		printf("input a str to send to a device\n");
+		scanf("%s",buffer);
 		my_content=new_user_content_from_str(buffer,DIR_TO_SERVER);
 		printf("%s\n",my_content->data);
 		
@@ -77,7 +75,6 @@ int main(int argc,char *argv[])
 		my_free(my_content->data);
 		my_free(my_content);
 		close(new_socket);
-		break;
 	}
 	
 	return 0;
