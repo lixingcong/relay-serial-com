@@ -4,7 +4,13 @@
 #include <libserialport.h>
 #include "utils.h"
 
-int open_com(char *devicename, int *fd,struct sp_port *port_blue,struct sp_port_config *port_blue_config);
+typedef struct com_port{
+	int fd;
+	struct sp_port *port;
+	struct sp_port_config *conf;
+}com_port_t;
+
+com_port_t *open_com(char *devicename);
 void close_com(struct sp_port *port_blue,struct sp_port_config *port_blue_config);
 
 

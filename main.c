@@ -18,6 +18,7 @@
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 
 #include "utils.h"
+#include "serial_server.h"
 
 #define TRUE   1
 #define FALSE  0
@@ -32,9 +33,17 @@ int main(int argc, char *argv[]) {
 		activity, i, valread, sd;
 	user_content_t *my_contents[MAXCLIENTS];
 	int max_sd;
-	int filefd;					/* 写入文件描述符 */
+	
+	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
+	com_port_t *my_com_conf;/* 串口配置 */
+	char buffer_com[MAXLEN];	/* 串口缓冲区 */
+	char *buffer_com_p=buffer_com;
+	int buffer_com_data_size=0;
+	
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_in address;
+
+	struct timeval tv;			/* select超时 */
 	
 	/* 每个客户端的缓冲区和索引 */
 	char buffer[MAXCLIENTS][MAXLEN];
@@ -53,6 +62,12 @@ int main(int argc, char *argv[]) {
 	
 	IP=argv[1];
 	PORT=argv[2];
+
+	/* 打开串口，须root权限 */
+	if(NULL==(my_com_conf=open_com(com_devicename))){
+		printf("error open com!\n");
+		return 1;
+	}
 
 	//initialise all client_socket[] to 0 so not checked
 	for (i = 0; i < max_clients; i++) {
@@ -101,7 +116,9 @@ int main(int argc, char *argv[]) {
 
 		//add master socket to set
 		FD_SET(master_socket, &readfds);
-		max_sd = master_socket;
+		FD_SET(my_com_conf->fd,&readfds);
+		
+		max_sd = master_socket>my_com_conf->fd?master_socket:my_com_conf->fd;
 
 		//add child sockets to set
 		for (i = 0; i < max_clients; i++) {
@@ -155,6 +172,27 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+		// 串口读
+		if (FD_ISSET(my_com_conf->fd, &readfds)) {
+			/* 非阻塞读取 */
+			valread=sp_nonblocking_read(my_com_conf->port,buffer_com_p+buffer_com_data_size,MAXLEN);
+			if(valread<0){
+				printf("read data from com error: %d\n",valread);
+				return 1;
+				buffer_com_data_size=0;
+				buffer_com_p=buffer_com;
+			}else{
+				buffer_com_data_size+=valread;
+				/* 读完所有数据，串口数据包必须以\r\n结尾 */
+				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
+					buffer_com_p[buffer_com_data_size]=0;
+					printf("%s",buffer_com_p);
+					buffer_com_data_size=0;
+					buffer_com_p=buffer_com;					
+				}
+			}
+		}
+		
 		//else its some IO operation on some other socket :)
 		for (i = 0; i < max_clients; i++) {
 			sd = client_socket[i];
@@ -248,6 +286,10 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	sp_free_port(my_com_conf->port);
+	sp_free_config(my_com_conf->conf);
+	my_free(my_com_conf);
+	
 	printf("exit..\n");
 	return 0;
 }

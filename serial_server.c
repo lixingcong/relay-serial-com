@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-22 21:16:33 >
+//Time-stamp: < serial_server.c 2016-06-22 22:33:11 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -17,42 +17,51 @@
 
 #define MAX_BUFFER_LENTH 65500
 
-int open_com(char *devicename, int *fd,struct sp_port *port_blue,struct sp_port_config *port_blue_config){
-	enum sp_return return_value;
-	int serialfd;				/* 串口文件描述符 */
+com_port_t *open_com(char *devicename){
+	com_port_t *tmp=my_malloc(sizeof(com_port_t));
 	/* 打开设备 */
-    if(sp_get_port_by_name(devicename, &port_blue) != SP_OK){
+    if(sp_get_port_by_name(devicename, &(tmp->port)) != SP_OK){
         fprintf(stderr, "Cannot find the serial port %s\n",devicename);
-		return -1;
+		sp_free_port(tmp->port);
+		my_free(tmp);
+		return NULL;
     }
 
 	/* 打开串口 */
-    if(sp_open(port_blue, SP_MODE_READ_WRITE) != SP_OK) {
+    if(sp_open(tmp->port, SP_MODE_READ_WRITE) != SP_OK) {
         fprintf(stderr, "Cannot open the serial port %s\n",devicename);
-        return -1;
+		sp_free_port(tmp->port);
+		my_free(tmp);
+		return NULL;
     }
+	
 	/* 文件描述符 */
-	if(sp_get_port_handle(port_blue,&serialfd)!=SP_OK){
+	if(sp_get_port_handle(tmp->port,&(tmp->fd))!=SP_OK){
 		fprintf(stderr, "Cannot get the serial port fd\n");
-        return -1;
+		sp_free_port(tmp->port);
+		my_free(tmp);
+		return NULL;
 	}else{
-		printf("got seriadfd is %d\n",serialfd);
-		*fd=serialfd;
+		printf("open %s ok, the fd is %d\n",devicename,tmp->fd);
 	}
 	/* 配置结构体 */
-    sp_new_config(&port_blue_config);
-    sp_set_config_baudrate(port_blue_config, 115200);
-    sp_set_config_parity(port_blue_config, SP_PARITY_NONE);
-    sp_set_config_bits(port_blue_config, 8);
-    sp_set_config_stopbits(port_blue_config, 1);
-    sp_set_config_flowcontrol(port_blue_config, SP_FLOWCONTROL_NONE);
+    sp_new_config(&(tmp->conf));
+    sp_set_config_baudrate(tmp->conf, 115200);
+    sp_set_config_parity(tmp->conf, SP_PARITY_NONE);
+    sp_set_config_bits(tmp->conf, 8);
+    sp_set_config_stopbits(tmp->conf, 1);
+    sp_set_config_flowcontrol(tmp->conf, SP_FLOWCONTROL_NONE);
 
 	/* 设置串口 */
-	if(sp_set_config(port_blue, port_blue_config) != SP_OK){
+	if(sp_set_config(tmp->port, tmp->conf) != SP_OK){
         fprintf(stderr, "Cannot configure the serial port\n");
-        return -1;
+		sp_free_port(tmp->port);
+		sp_free_config(tmp->conf);
+		my_free(tmp);
+		return NULL;
     }
-	return 0;
+
+	return tmp;
 }
 
 void close_com(struct sp_port *port_blue,struct sp_port_config *port_blue_config){
