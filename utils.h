@@ -24,6 +24,7 @@
 void *my_malloc(size_t size);
 /* 释放内存 */
 #define my_free(ptr)							\
+    if(ptr)                                     \
     do {										\
         free(ptr);								\
         ptr = NULL;								\
@@ -31,10 +32,9 @@ void *my_malloc(size_t size);
 
 /* 封包用户输入的数据（来自串口），仿照shadowsocks-libev的封装包格式 */
 typedef struct user_content {
-	int index;
-	int data_size;
-	int sockfd;						/* sockdet文件描述符 */
-	int direction;
+	int index;		  /* 已发送字节索引 */
+	int data_size;				/* data包的大小 */
+	int direction;				/* 发送方向：到ip，到串口，到局域网设备 */
 	char *device;				/* 串口 蓝牙 设备名称 */
 	char *ip;
 	char *port;

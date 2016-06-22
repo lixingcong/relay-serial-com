@@ -7,9 +7,8 @@ DEFINEFLAGS=
 # serial -----> main ------> phone
 ifeq ($(compile),serial)
 	DEFINEFLAGS+=-DSERIAL_MAIN
-endif
 # serial <----- main <------ phone
-ifeq ($(compile),main)
+else ifeq ($(compile),main)
 	DEFINEFLAGS+=-DSERVER_MAIN
 endif
 

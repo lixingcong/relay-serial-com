@@ -48,6 +48,10 @@ int main(int argc,char *argv[])
 		printf("input a str to send to a device\n");
 		scanf("%s",buffer);
 		my_content=new_user_content_from_str(buffer,DIR_TO_SERVER);
+		if(my_content==NULL){
+			printf("invalid packet!\n");
+			continue;
+		}
 		printf("%s\n",my_content->data);
 		
 		memset(&hints, 0, sizeof hints);

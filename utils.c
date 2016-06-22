@@ -48,7 +48,6 @@ user_content_t *new_user_content_from_str(char *in,int direction){
 		tmp=my_malloc(sizeof(user_content_t));
 		tmp->data_size=(strlen(in)-offset[1]);
 		tmp->index=0;
-		tmp->sockfd=-1;
 		tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
 		tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
@@ -72,7 +71,7 @@ user_content_t *new_user_content_from_str(char *in,int direction){
 		tmp=my_malloc(sizeof(user_content_t));
 		tmp->data_size=(strlen(in)-offset[0]);
 		tmp->index=0;
-		tmp->sockfd=-1;
+
 		tmp->device=my_malloc(sizeof(char)*(offset[0]-1));
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
@@ -82,11 +81,12 @@ user_content_t *new_user_content_from_str(char *in,int direction){
 		memcpy(tmp->data,in+offset[0],tmp->data_size+1);
 		*(tmp->data+tmp->data_size)=0;
 	}else{// to server
+		// 输入合法性只能在服务端判断！
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
 		tmp->data_size=(strlen(in));
 		tmp->index=0;
-		tmp->sockfd=-1;
+
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
 		memcpy(tmp->data,in,tmp->data_size);

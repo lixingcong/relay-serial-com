@@ -19,17 +19,13 @@
 
 #include "utils.h"
 
-#ifdef SERVER_MAIN
-#define SERIAL_MAIN
-#endif
-
 #define TRUE   1
 #define FALSE  0
 #define PORT_LISTEN 4000
 #define MAXLEN 65500			/* 实际上是65535，留余量 */
 #define MAXCLIENTS 5
 
-#ifdef SERIAL_MAIN
+
 int main(int argc, char *argv[]) {
 	int opt = TRUE;
 	int master_socket, addrlen, new_socket, client_socket[MAXCLIENTS], max_clients = MAXCLIENTS,
@@ -166,8 +162,8 @@ int main(int argc, char *argv[]) {
 			if (FD_ISSET(sd, &readfds)) {
 				//Check if it was for closing , and also read the incoming message
 				if ((valread = read(sd, buffer_p[i]+buffer_data_size[i],MAXLEN)) == 0) {
-					buffer[i][buffer_data_size[i]]=0;
 					//Somebody disconnected , get his details and print
+					buffer[i][buffer_data_size[i]]=0;
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
 					printf("\ndisconnected: %s:%d total recv %d bytes \n",
@@ -178,42 +174,66 @@ int main(int argc, char *argv[]) {
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);
 					client_socket[i] = 0;
-					/* create relay struct: from ip, to serial */
+
+              #ifdef SERIAL_MAIN
+					/* create relay struct: from serial, to ip */
+					my_contents[i]=new_user_content_from_str(buffer[i],DIR_TO_PHONE);
+					if(!my_contents[i]){
+						printf("invalid packet!\n");
+					}else{
+						// 输入合法性只能在打开远程ip时候判断！
+						puts(my_contents[i]->data);
+						/* now relay to target : to LAN ip */
+						memset(&hints, 0, sizeof hints);
+						hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
+						hints.ai_socktype = SOCK_STREAM;
+						hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+						if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) {
+							printf("getaddrinfo error!\n");
+							return 1;
+						}else{
+							if((new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
+								/* connect! */
+								if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+									/* 这里应该返回结果 告诉来源：目标拒绝连接 */
+									perror("connect error");
+								}else{
+									if(0==sendall(new_socket,my_contents[i]))
+										printf("tcp relay ok!\n");
+									else
+										printf("sendall fail.\n");
+								}
+								close(new_socket);
+							}
+							
+						}
+						my_free(my_contents[i]->ip);
+						my_free(my_contents[i]->port);
+						my_free(my_contents[i]->data);
+						my_free(my_contents[i]);
+					}
+              #endif
+
+			  #ifdef SERVER_MAIN
+					/* create relay struct: from LAN ip, to serial */
 					my_contents[i]=new_user_content_from_str(buffer[i],DIR_TO_SERIAL);
-					
-					/* now relay to target : to ip*/
-					/* memset(&hints, 0, sizeof hints); */
-					/* hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本 */
-					/* hints.ai_socktype = SOCK_STREAM; */
-					/* hints.ai_flags = AI_PASSIVE; // fill in my IP for me */
-					/* if (getaddrinfo(my_contents[i]->ip, my_contents[i]->port, &hints, &res) != 0) { */
-					/* 	printf("getaddrinfo error!\n"); */
-					/* 	return 1; */
-					/* } */
-					/* new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol); */
-
-					/* /\* connect! *\/ */
-					/* if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){ */
-					/* 	/\* 这里应该返回结果 告诉来源：目标拒绝连接 *\/ */
-					/* 	perror("connect error"); */
-					/* }else{ */
-					/* 	if(0==sendall(new_socket,my_contents[i])) */
-					/* 		printf("tcp relay ok!\n"); */
-					/* 	else */
-					/* 		printf("sendall fail.\n"); */
-					/* } */
-
-					/* now relay to serial */
-					puts(my_contents[i]->data);
-				   
-					close(new_socket);
-					my_free(my_contents[i]->data);
-					my_free(my_contents[i]->device);
-					my_free(my_contents[i]);
+					if(!my_contents[i]){
+						printf("invalid packet!\n");					
+					}else{
+						// 输入合法性只能在打开串口时候判断！
+						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备						
+						/* now relay to serial */
+						puts(my_contents[i]->data);
+						my_free(my_contents[i]->data);
+						my_free(my_contents[i]->device);
+						my_free(my_contents[i]);
+					}
+						
+              #endif
 				}else {
 					// get his details and print
-					getpeername(sd, (struct sockaddr*) &address,
-								(socklen_t*) &addrlen);
+					/* getpeername(sd, (struct sockaddr*) &address, */
+								/* (socklen_t*) &addrlen); */
 					/* printf("RECV %d bytes, %s:%d said to me: ", */
 					/* 	   valread, */
 					/* 	   inet_ntoa(address.sin_addr), */
@@ -231,5 +251,4 @@ int main(int argc, char *argv[]) {
 	printf("exit..\n");
 	return 0;
 }
-#endif
 
