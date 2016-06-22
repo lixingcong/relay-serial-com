@@ -1,6 +1,6 @@
 #LDFLAGS=-lserialport
 
-LDFLAGS=
+LDFLAGS=-lserialport
 CFLAGS=
 DEFINEFLAGS=
 
@@ -18,9 +18,10 @@ OBJS+=phone.o
 OBJS+=utils.o
 
 all: $(OBJS)
-	$(CC) -o main main.o utils.o $(LDFLAGS)
+	$(CC) -o main main.o utils.o serial_server.o $(LDFLAGS)
 	$(CC) -o phone phone.o utils.o $(LDFLAGS)
-	$(CC) -o serial_server serial_server.o utils.o $(LDFLAGS)
+#	$(CC) -o serial_server serial_server.o utils.o $(LDFLAGS)
+#	$(CC) -o main main.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
