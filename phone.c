@@ -30,13 +30,22 @@ int main(int argc,char *argv[])
 	char buffer[MAXLEN];		/* 接收数据缓冲器 */
 	int master_socket,new_socket,max_fd; /* 文件描述符 */
 	char *IP,*PORT;				/* socket发送或者监听地址 */
-	if (argc != 3) {
-		fprintf(stderr,"usage: %s ip port\n",argv[0]);
-		return 1;
-	}
+	/* if (argc != 3) { */
+	/* 	fprintf(stderr,"usage: %s ip port\n",argv[0]); */
+	/* 	return 1; */
+	/* } */
 	
-	IP=argv[1];
-	PORT=argv[2];
+	/* IP=argv[1]; */
+	/* PORT=argv[2]; */
+	while(1){
+		scanf("%s",buffer);
+		my_content=new_user_content_from_str(buffer,"formLXC",DIR_TO_PHONE);
+		printf("%s\n",my_content->data);
+		printf("   len is %d, data size is %d, iplen: %d, polen:%d\n",strlen(my_content->data),(my_content->data_size),strlen(my_content->ip),strlen(my_content->port));
+
+		my_free(my_content->data);
+		my_free(my_content);
+	}
 
 
 #ifdef SERVER_MAIN

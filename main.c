@@ -186,7 +186,6 @@ int main(int argc, char *argv[]) {
 				/* 读完所有数据，串口数据包必须以\r\n结尾 */
 				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
 					buffer_com_p[buffer_com_data_size]=0;
-					printf("%s",buffer_com_p);
 					/* create relay struct: from serial, to ip */
 					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,DIR_TO_PHONE);
 					if(!my_contents[MAXCLIENTS]){
@@ -201,7 +200,6 @@ int main(int argc, char *argv[]) {
 						hints.ai_flags = AI_PASSIVE; // fill in my IP for me
 
 						if (getaddrinfo(my_contents[MAXCLIENTS]->ip, my_contents[MAXCLIENTS]->port, &hints, &res) != 0) {
-						/* if (getaddrinfo("127.0.0.1", "4002", &hints, &res) != 0) { */
 							printf("getaddrinfo error!\n");
 							/* return 1; */
 						}else{
