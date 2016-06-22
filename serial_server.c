@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-22 15:25:56 >
+//Time-stamp: < serial_server.c 2016-06-22 20:53:47 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -52,20 +52,6 @@ int main(int argc,char *argv[]){
 
 	if(read_input(in));
 	my_content=new_user_content_from_str(in,DIR_TO_SERVER);
-	if(!my_content){
-		printf("invalid input!\n");
-		return 1;
-	}
-
-	/* filefd=open("dd.txt",O_RDWR); */
-	/* byte_readed = read(filefd, in, sizeof(in)); */
-	/* printf("%d bytes readed\n",byte_readed); */
-	/* getchar(); */
-	/* in[byte_readed]=0; */
-	/* my_content=my_malloc(sizeof(user_content_t)); */
-	/* my_content->data_size=strlen(in); */
-	/* my_content->index=0; */
-	/* my_content->data=in; */
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
