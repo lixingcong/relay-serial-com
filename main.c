@@ -1,4 +1,5 @@
 /**
+   不足之处：valread是公用的，需要修改为局部的变量
  * 修改版，配合我的client程序使用
  * 使用select进行多路复用
  * https://gist.github.com/silv3rm00n/5604330
@@ -17,6 +18,9 @@
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/rfcomm.h>
+
 #include "utils.h"
 #include "serial_server.h"
 
@@ -27,12 +31,17 @@
 
 
 int main(int argc, char *argv[]) {
+	/* select部份 */
 	int opt = TRUE;
 	int master_socket, addrlen, new_socket, client_socket[MAXCLIENTS], max_clients = MAXCLIENTS,
 		activity, i, valread, sd;
 	user_content_t *my_contents[MAXCLIENTS+1];
 	int max_sd;
-	
+	struct timeval tv;			/* select超时 */
+	//set of socket descriptors
+	fd_set readfds;
+
+	/* 串口部份 */
 	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
 	com_port_t *my_com_conf;/* 串口配置 */
 	char buffer_com[MAXLEN];	/* 串口缓冲区 */
@@ -40,20 +49,23 @@ int main(int argc, char *argv[]) {
 	char *header=NULL;			/* 封包的header */
 	char itoa_buffer[8];
 	int buffer_com_data_size=0;
-	
+
+	/* IP部份 */
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_in address;
-
-	struct timeval tv;			/* select超时 */
-	
 	/* 每个客户端的缓冲区和索引 */
 	char buffer[MAXCLIENTS][MAXLEN];
 	char *buffer_p[MAXCLIENTS];  //data buffer of 1K
 	int buffer_data_size[MAXCLIENTS];
-	
-	//set of socket descriptors
-	fd_set readfds;
 
+	/* 蓝牙部份 */
+	struct sockaddr_rc blue_loc_addr = { 0 }, blue_rem_addr = { 0 };
+	char blue_buffer[MAXLEN];
+	int blue_fd,blue_fd_client,blue_bytes_read;
+	socklen_t blue_opt;
+	
+
+	/* args参数 */
 	char *PORT;
 
 	if (argc != 2) {
