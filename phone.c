@@ -76,7 +76,7 @@ int main(int argc,char *argv[])
 			/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 			perror("connect error");
 		}else{
-			if(0==sendall(my_content))
+			if(my_content->data_size==send(my_content->fd,my_content->data,my_content->data_size,0))
 				printf("tcp send ok!\n");
 			else
 				printf("sendall fail.\n");

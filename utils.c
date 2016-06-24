@@ -14,6 +14,7 @@
 #include <libserialport.h>
 #include "utils.h"
 #include "bluetooth.h"
+#include "serial_server.h"
 
 #define ERROR printf
 #define LOGE printf
@@ -193,18 +194,9 @@ int sendall(user_content_t *in){
 	int n,s;
 	struct sockaddr_rc addr = { 0 };
 	if(in->direction==DIR_TO_SERVER || in->direction==DIR_TO_PHONE){ /* 发送到ip */
-		while(in->index < in->data_size) {
-			n = send(in->fd, in->data+in->index, in->data_size, 0);
-			/* sleep(0.5); */
-			if (n == -1) { printf("sendall error!\n");break; }
-			in->index += n;
-		}
-		return n==-1?-1:0; // 失敗時傳回 -1、成功時傳回 0
+
 	}else if(in->direction==DIR_TO_SERIAL){
-		if((n=sp_blocking_write(in->com_port,in->data,in->data_size,500))<0){
-			printf("error in blocking write to COM!\n");
-			return n;
-		}
+		
 	}else if(in->direction==DIR_TO_BLUETOOTH){
 		s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
 		if(s<0){
@@ -256,6 +248,8 @@ int get_direction(char *in){
 // 转发包，前提是user_content要满足非NULL的条件
 int redirect_from_user_content(user_content_t *in){
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
+	user_content_t *my_com_conf;
+	int n;
 	
 	switch (in->direction){		
 	case DIR_TO_PHONE:
@@ -274,10 +268,12 @@ int redirect_from_user_content(user_content_t *in){
 					/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 					perror("connect error");
 				}else{
-					if(0==sendall(in))
-						printf("    tcp relay ok!\n");
-					else
-						printf("    sendall fail.\n");
+					while(in->index < in->data_size) {
+						n = send(in->fd, in->data+in->index, in->data_size, 0);
+						/* sleep(0.5); */
+						if (n == -1) { printf("sendall error!\n");break; }
+						in->index += n;
+					}
 				}
 				close(in->fd);
 			}else{
@@ -287,15 +283,31 @@ int redirect_from_user_content(user_content_t *in){
 		my_free(in->ip);
 		my_free(in->port);
 		my_free(in->data);
+		if(n<0)return -1;
 		break;
 #ifdef MODULE_BLUETOOTH
 	case DIR_TO_BLUETOOTH:
-		
 		break;
 #endif
 		
-#ifdef MODULE_SERIAL		
+#ifdef MODULE_SERIAL
 	case DIR_TO_SERIAL:
+		/* 打开串口，须root权限 */
+		if(NULL==(my_com_conf=open_com(in->device))){
+			printf("error open com!\n");			
+			return -1;
+		}
+		
+		n=sp_blocking_write(my_com_conf->com_port,in->data,in->data_size,500);
+
+		sp_free_port(my_com_conf->com_port);
+		sp_free_config(my_com_conf->com_conf);
+		my_free(my_com_conf);
+		
+		if(n<0){
+			printf("error when write to COM with blocking\n");
+			return -1;
+		}
 		break;
 #endif		
 	default:

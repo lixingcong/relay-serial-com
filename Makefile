@@ -21,11 +21,11 @@ all: $(OBJS)
 
 # serial -----> main ------> phone
 	$(CC) -c phone.c -DSERVER_MAIN 
-	$(CC) -o phone_send phone.o utils.o $(LDFLAGS)
+	$(CC) -o phone_send phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
 # serial <----- main <------ phone
 	$(CC) -c phone.c -DSERIAL_MAIN 
-	$(CC) -o phone_recv phone.o utils.o $(LDFLAGS)
+	$(CC) -o phone_recv phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
 #	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
 

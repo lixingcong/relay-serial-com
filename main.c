@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 	char *header=NULL;			/* 将转换好的ip地址：封包成header */
 
 	/* 串口部份 固定变量 */
-	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
+	static char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
 	user_content_t *my_com_conf=my_malloc(sizeof(user_content_t));/* 串口配置 */
 	
 	/* 串口部份 动态变量 */
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
 		}
 #endif		
 		
-		//else its some IO operation on some other socket :)
+		// 局域网ip读
 		for (i = 0; i < max_clients; i++) {
 			sd = client_socket[i];
 
