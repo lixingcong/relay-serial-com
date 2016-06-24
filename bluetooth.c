@@ -4,7 +4,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
-#include "bluetooth.h"
+/* #include "bluetooth.h" */
+#include "utils.h"
 
 int create_bluetooth_socket(){
 	int blue_fd;
@@ -56,4 +57,26 @@ int main(int argc, char **argv)
     close(blue_fd);
     return 0;
 }
+#endif
+
+#ifdef BLUETOOTH_TEST
+
+int main(){
+    char buf[100];
+	user_content_t *my;
+	
+	
+	while(1){
+		scanf("%s",buf);
+		my=new_user_content_from_str(buf,"fuck",DIR_TO_BLUETOOTH);
+		if(my){
+			my_free(my);
+		}else{
+			printf("NULL!\n");
+		}
+
+	}
+    return 0;
+}
+
 #endif

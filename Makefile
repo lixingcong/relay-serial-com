@@ -11,24 +11,26 @@ ifeq ($(bluetooth),1)
 	DEFINEFLAGS+=-DMODULE_BLUETOOTH
 endif
 
-OBJS+=main.o
-OBJS+=serial_server.o
+#OBJS+=main.o
+#OBJS+=serial_server.o
 OBJS+=utils.o
 OBJS+=bluetooth.o
 
 all: $(OBJS)
-	$(CC) -o main main.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
+#	$(CC) -o main main.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
 # serial -----> main ------> phone
-	$(CC) -c phone.c -DSERVER_MAIN 
-	$(CC) -o phone_send phone.o utils.o
+#	$(CC) -c phone.c -DSERVER_MAIN 
+#	$(CC) -o phone_send phone.o utils.o
 
 # serial <----- main <------ phone
-	$(CC) -c phone.c -DSERIAL_MAIN 
-	$(CC) -o phone_recv phone.o utils.o
+#	$(CC) -c phone.c -DSERIAL_MAIN 
+#	$(CC) -o phone_recv phone.o utils.o
+
+	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
-	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
+	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS) -DBLUETOOTH_TEST
 
 .PHONY: clean run
 

@@ -11,7 +11,9 @@
 #include <unistd.h>
 #include <time.h>
 
+#include <libserialport.h>
 #include "utils.h"
+#include "bluetooth.h"
 
 #define ERROR printf
 #define LOGE printf
@@ -84,7 +86,7 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		*(tmp->data+header_len)=':';
 		memcpy(tmp->data+header_len+1,in+offset[0],tmp->data_size-header_len);
 		
-	}else{// to server
+	}else if(direction==DIR_TO_SERVER){// to server
 		// 输入合法性只能在服务端判断！
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
@@ -95,8 +97,27 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		memcpy(tmp->data,in,tmp->data_size);
 		*(tmp->data+tmp->data_size)=0;
+	}else if(direction==DIR_TO_BLUETOOTH){
+		
+		pch=strchr(in,']');
+		offset[0]=pch-in+1;
+		if(offset[0]!=19){
+			printf("error MAC format in new_content_from_str!\n");
+			return NULL;
+		}
+		tmp=my_malloc(sizeof(user_content_t));
+		printf("ok!\n");
+		return tmp;
+		/* tmp=my_malloc(sizeof(user_content_t)); */
+		/*copy MAC address */
+		/* memcpy(tmp->mac,data+1,18); */
+		/* tmp->index=0; */
+		
+		
+	}else{
+		printf("error direction\n");
+		return NULL;
 	}
-
 
 	return tmp;
 }
@@ -149,16 +170,47 @@ int create_server_socket(const char *host,const char *port){
 }
 
 
-/* 将user_content的内容全部发送出去 阻塞操作*/
-int sendall(int s, user_content_t *in){
-	int n;
-	while(in->index < in->data_size) {
-		n = send(s, in->data+in->index, in->data_size, 0);
-		/* sleep(0.5); */
-		if (n == -1) { printf("sendall error!\n");break; }
-		in->index += n;
+/* 将user_content的内容全部发送出去 根据direction 阻塞操作*/
+int sendall(user_content_t *in){
+	int n,s;
+	struct sockaddr_rc addr = { 0 };
+	if(in->direction==DIR_TO_SERVER || in->direction==DIR_TO_PHONE){ /* 发送到ip */
+		while(in->index < in->data_size) {
+			n = send(in->fd, in->data+in->index, in->data_size, 0);
+			/* sleep(0.5); */
+			if (n == -1) { printf("sendall error!\n");break; }
+			in->index += n;
+		}
+		return n==-1?-1:0; // 失敗時傳回 -1、成功時傳回 0
+	}else if(in->direction==DIR_TO_SERIAL){
+		if((n=sp_blocking_write(in->com_port,in->data,in->data_size,500))<0){
+			printf("error in blocking write to COM!\n");
+			return n;
+		}
+	}else if(in->direction==DIR_TO_BLUETOOTH){
+		s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+		if(s<0){
+			printf("error in socket in sendall\n");
+			return -1;
+		}
+		// set the connection parameters (who to connect to)
+		addr.rc_family = AF_BLUETOOTH;
+		addr.rc_channel = (uint8_t) 1;
+		str2ba(in->mac, &addr.rc_bdaddr );
+
+		if(connect(s, (struct sockaddr *)&addr, sizeof(addr))<0){
+			printf("error in connect in sendall\n");
+			return -1;
+		}
+		
+		n=write(in->fd, in->data, in->data_size);
+		
+		return n;
+	}else{
+		printf("error diretion in sendall!\n");
 	}
-	return n==-1?-1:0; // 失敗時傳回 -1、成功時傳回 0
+
+	return -1;
 }
 
 char *get_header_ipv4(char *ip,char *port){
