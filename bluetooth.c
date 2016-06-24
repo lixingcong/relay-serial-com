@@ -70,25 +70,26 @@ int main(int argc, char **argv)
 	char dest[18] = "00:15:83:3D:0A:57";//send to 李剑's bluetooth设备
 	char buffer[2000];
 
-// allocate a socket
-	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-
-// set the connection parameters (who to connect to)
-	addr.rc_family = AF_BLUETOOTH;
-	addr.rc_channel = (uint8_t) 1;
-	str2ba( dest, &addr.rc_bdaddr );
-
 	while(1){
 		printf("input str to send:\n");
 		scanf("%s",buffer);
+		
+		s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+
+		addr.rc_family = AF_BLUETOOTH;
+		addr.rc_channel = (uint8_t) 1;
+		str2ba( dest, &addr.rc_bdaddr );
+
+
 		status = connect(s, (struct sockaddr *)&addr, sizeof(addr));
 		if( status == 0 ) {
 			status = write(s, buffer, strlen(buffer));
 		}
 		if( status < 0 ) perror("uh oh");
+
+		close(s);
 	}
 
-	close(s);
 	return 0;
 }
 
