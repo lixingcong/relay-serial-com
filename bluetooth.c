@@ -38,21 +38,24 @@ int main(int argc, char **argv)
     // put socket into listening mode
     listen(blue_fd, 1);
 
-    // accept one connection
-    blue_fd_client = accept(blue_fd, (struct sockaddr *)&blue_rem_addr, &blue_opt);
+	while(1){
+		// accept one connection
+		blue_fd_client = accept(blue_fd, (struct sockaddr *)&blue_rem_addr, &blue_opt);
 
-    ba2str( &blue_rem_addr.rc_bdaddr, blue_buffer );
-    fprintf(stderr, "accepted connection from %s\n", blue_buffer);
-    memset(blue_buffer, 0, sizeof(blue_buffer));
+		ba2str( &blue_rem_addr.rc_bdaddr, blue_buffer );
+		fprintf(stderr, "%s said to me:\n", blue_buffer);
+		memset(blue_buffer, 0, sizeof(blue_buffer));
 
-    // read data from the client
-    blue_bytes_read = read(blue_fd_client, blue_buffer, sizeof(blue_buffer));
-    if( blue_bytes_read > 0 ) {
-        printf("received [%s]\n", blue_buffer);
-    }
+		// read data from the client
+		blue_bytes_read = read(blue_fd_client, blue_buffer, sizeof(blue_buffer));
+		if( blue_bytes_read > 0 ) {
+			printf("%s\n", blue_buffer);
+		}
 
-    // close connection
-    close(blue_fd_client);
+		// close connection
+		close(blue_fd_client);
+		
+	}
     close(blue_fd);
     return 0;
 }
