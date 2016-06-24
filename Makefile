@@ -30,7 +30,7 @@ all: $(OBJS)
 	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
-	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS) -DBLUETOOTH_TEST
+	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS) -DTEST_DIRECTION
 
 .PHONY: clean run
 

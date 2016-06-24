@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 }
 #endif
 
-#ifdef BLUETOOTH_TEST
+#ifdef TEST_DIRECTION
 
 int main(){
     char buf[100];
@@ -68,12 +68,23 @@ int main(){
 	
 	while(1){
 		scanf("%s",buf);
-		my=new_user_content_from_str(buf,"fuck",DIR_TO_BLUETOOTH);
+		my=new_user_content_from_str(buf,"fuck");
 		if(my){
-			printf("mac len is %d,mac sizeof is %d\n",strlen(my->mac),sizeof(my->mac));
+			puts(my->data);
 			printf("data len is %d,datasize is %d\n",strlen(my->data),my->data_size);
 
-			my_free(my->data);
+			if(my->direction==DIR_TO_PHONE){
+				puts(my->ip);
+				printf("ip len %d, size %d\n",strlen(my->ip),sizeof(*my->ip));
+				puts(my->port);
+				printf("port len %d, size %d\n",strlen(my->port),sizeof(*my->port));
+				my_free(my->ip);
+				my_free(my->port);
+			}else if(my->direction==DIR_TO_SERIAL){
+				puts(my->device);
+				printf("dev len %d, size %d\n",strlen(my->device),sizeof(*my->device));
+				my_free(my->device);				
+			}
 			my_free(my);
 		}else{
 			printf("NULL!\n");

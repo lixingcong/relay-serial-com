@@ -47,7 +47,7 @@ typedef struct user_content {
 } user_content_t;
 
 /* 输入192.168.4.1:3333:xxxxdataxxxx 返回一个user_content的指针，使用后记得释放内存 */
-user_content_t *new_user_content_from_str(char *in, char *header, int direction);
+user_content_t *new_user_content_from_str(char *in, char *header);
 
 // TCP bind, lack of listen
 int create_server_socket(const char *host,const char *port);

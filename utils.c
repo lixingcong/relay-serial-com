@@ -30,11 +30,13 @@ void *my_malloc(size_t size) {
    输入/dev/ttyUSB0:xxxx
    返回一个user_content的指针，使用后记得释放内存 
 */
-user_content_t *new_user_content_from_str(char *in,char *header,int direction){
+user_content_t *new_user_content_from_str(char *in,char *header){
 	char *pch;
 	int offset[2];
 	int occurs=0;
 	int header_len=strlen(header);
+	int direction=get_direction(in);
+//	printf("direction :%d\n",direction);
 	user_content_t *tmp;
 
 	if(direction==DIR_TO_PHONE){
@@ -49,21 +51,25 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
-		tmp->data_size=(strlen(in)-offset[1]+header_len+2);//额外包含一个':'和结束符'\0'
+		tmp->data_size=(strlen(in)-offset[1]+header_len+2);//结束符'\0'和':'
 		tmp->index=0;
-		tmp->ip=my_malloc(sizeof(char)*(offset[0]-1));
-		tmp->port=my_malloc(sizeof(char)*(offset[1]-1));	
+		tmp->ip=my_malloc(sizeof(char)*(offset[0]));
+		//printf("ip sizeof is %d\n",offset[0]);
+		
+		tmp->port=my_malloc(sizeof(char)*(offset[1]-offset[0]));
+		//printf("port sizeof is %d\n",offset[1]-offset[0]);
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
 		memcpy(tmp->ip,in,offset[0]-1);
-		*(tmp->ip+offset[0]-1)=0;
+		*(tmp->ip+offset[0])=0;
 
 		memcpy(tmp->port,in+offset[0],offset[1]-offset[0]);
 		*(tmp->port+offset[1]-offset[0]-1)=0;
 
 		memcpy(tmp->data,header,header_len);
-		*(tmp->data+header_len)=':';
-		memcpy(tmp->data+header_len+1,in+offset[1],tmp->data_size-header_len);
+		memcpy(tmp->data+header_len,in+offset[1]-1,tmp->data_size-header_len);
+		
+		tmp->direction=direction;
 	}else if(direction==DIR_TO_SERIAL){
 		pch=strchr(in,':');
 		if(pch!=NULL)
@@ -73,18 +79,20 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
-		tmp->data_size=(strlen(in)-offset[0]+header_len+2);//额外包含一个':'和结束符'\0'
+		tmp->data_size=(strlen(in)-offset[0]+header_len+2);//额外结束符'\0'和':'
 		tmp->index=0;
  
-		tmp->device=my_malloc(sizeof(char)*(offset[0]-1));
+		tmp->device=my_malloc(sizeof(char)*(offset[0]));
+		printf("device sizeof is %d\n",offset[0]);
 		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
 
 		memcpy(tmp->device,in,offset[0]-1);
-		*(tmp->device+offset[0]-1)=0;
+		*(tmp->device+offset[0])=0;
 
 		memcpy(tmp->data,header,header_len);
-		*(tmp->data+header_len)=':';
-		memcpy(tmp->data+header_len+1,in+offset[0],tmp->data_size-header_len);
+		memcpy(tmp->data+header_len,in+offset[0]-1,tmp->data_size-header_len);
+
+		tmp->direction=direction;
 		
 	}else if(direction==DIR_TO_SERVER){// to server
 		// 输入合法性只能在服务端判断！
@@ -97,6 +105,8 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 
 		memcpy(tmp->data,in,tmp->data_size);
 		*(tmp->data+tmp->data_size)=0;
+		
+		tmp->direction=direction;
 	}else if(direction==DIR_TO_BLUETOOTH){
 		pch=strchr(in,']');
 		offset[0]=pch-in+1;
@@ -118,6 +128,8 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		
 		memcpy(tmp->data,header,header_len);
 		memcpy(tmp->data+header_len,in+offset[0],tmp->data_size-header_len);
+		
+		tmp->direction=direction;
 		
 		/* tmp->index=0; */
 		return tmp;		
