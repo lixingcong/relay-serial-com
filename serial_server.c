@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-24 22:57:28 >
+//Time-stamp: < serial_server.c 2016-06-25 00:01:52 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -13,9 +13,18 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <time.h>
-#include "serial_server.h"
+#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 
+#include "serial_server.h"
 #include "utils.h"
+
+#ifdef SERIAL_SEND
+#define SERIAL_MAIN
+#endif
+
+#ifdef SERIAL_RECV
+#define SERIAL_MAIN
+#endif
 
 
 /* 待打开的设备名字 */
@@ -74,7 +83,7 @@ void close_com(struct sp_port *port_blue,struct sp_port_config *port_blue_config
 }
 
 // 发送到串口
-#ifdef SERIAL_SEND
+#ifdef SERIAL_MAIN
 
 int main(){
 	int i;
@@ -83,6 +92,8 @@ int main(){
 	struct sp_port_config *port_blue_config;
 	char buffer[1024];
 	int serialfd;				/* 串口文件描述符 */
+	fd_set readfds;
+	
 
 /* 打开设备 */
 	if(sp_get_port_by_name(device_name1, &port_blue) != SP_OK){
@@ -115,7 +126,25 @@ int main(){
 		return 1;
 	}
 
+#ifdef SERIAL_RECV
+	FD_ZERO(&readfds);
+	FD_SET(serialfd,&readfds);
+	
+	while(1){
+		select(serialfd+1,&readfds,NULL,NULL,NULL);
+		if(FD_ISSET(serialfd,&readfds)){
+			i=sp_blocking_read(port_blue,buffer,2000,500);
+			if(i<0)printf("read bytes less than zero\n");
+			else{
+				printf("%s",buffer);
+			}	
+		}
+	}
+	
+#endif	
+
 /* 写入 */
+#ifdef SERIAL_SEND
 /* 返回值是写入成功的字节数目 */
 	while(1){
 		printf("input str:\n");
@@ -130,6 +159,7 @@ int main(){
 			printf("write to COM error!\n");
 
 	}
+#endif	
 
 /* 释放资源 */
 	sp_free_port(port_blue);
@@ -138,3 +168,4 @@ int main(){
 }
 
 #endif
+

@@ -2,7 +2,7 @@
 .#*
 .*-swp
 main
-serial_server
+serial_recv
 serial_send
 phone_recv
 phone_send

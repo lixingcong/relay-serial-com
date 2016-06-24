@@ -43,7 +43,7 @@ int main(int argc,char *argv[])
 	IP=argv[1];
 	PORT=argv[2];
 
-#ifdef SERVER_MAIN
+#ifdef PHONE_SEND
 	int filefd,byte_readed;
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_in address;
@@ -90,7 +90,7 @@ int main(int argc,char *argv[])
 	
 	return 0;
 #endif
-#ifdef SERIAL_MAIN
+#ifdef PHONE_RECV
 	fd_set readfds;
 	int valread; /* 接收到的字节 */
 	unsigned int client_num_ctr=0;		/* 客户端counter数 */

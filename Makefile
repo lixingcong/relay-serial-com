@@ -24,12 +24,12 @@ all: $(OBJS)
 # main server runs on my ubuntu 16.04
 	$(CC) -o main main.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
-# serial -----> main ------> phone
-	$(CC) -c phone.c -DSERVER_MAIN 
+# serial <----- main <------ phone
+	$(CC) -c phone.c -DPHONE_SEND
 	$(CC) -o phone_send phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
-# serial <----- main <------ phone
-	$(CC) -c phone.c -DSERIAL_MAIN 
+# serial -----> main ------> phone
+	$(CC) -c phone.c -DPHONE_RECV
 	$(CC) -o phone_recv phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
 # bluetooth-server recv data
@@ -41,8 +41,10 @@ all: $(OBJS)
 	$(CC) -o blue_send bluetooth.o utils.o serial_server.o $(LDFLAGS)
 	rm bluetooth.o
 
-# operate a /dev/ttyUSB0 to send data
+# operate a /dev/ttyUSB0 to send/recv data 
 	$(CC) -o serial_send serial_server.c utils.o $(LDFLAGS) -DSERIAL_SEND
+	$(CC) -o serial_recv serial_server.c utils.o $(LDFLAGS) -DSERIAL_RECV
+	rm serial_server.o
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
