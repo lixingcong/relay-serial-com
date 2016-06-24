@@ -1,27 +1,38 @@
-
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
-int main(int argc, char **argv)
-{
-    struct sockaddr_rc blue_loc_addr = { 0 }, blue_rem_addr = { 0 };
-    char blue_buffer[1024] = { 0 };
-    int blue_fd, blue_fd_client, blue_bytes_read;
-    socklen_t blue_opt = sizeof(blue_rem_addr);
-
-    // allocate socket
-    blue_fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-
+int create_bluetooth_socket(){
+	int blue_fd;
+	struct sockaddr_rc blue_loc_addr = { 0 };
+	// allocate socket
+    if((blue_fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM))<0){
+		printf("error creating socket of bluetooth\n");
+		return -1;
+	}
     // bind socket to port 1 of the first available 
     // local bluetooth adapter
     blue_loc_addr.rc_family = AF_BLUETOOTH;
     blue_loc_addr.rc_bdaddr = *BDADDR_ANY;
+	/* bind port 1 */
     blue_loc_addr.rc_channel = (uint8_t) 1;
-    bind(blue_fd, (struct sockaddr *)&blue_loc_addr, sizeof(blue_loc_addr));
+	
+    if((bind(blue_fd, (struct sockaddr *)&blue_loc_addr, sizeof(blue_loc_addr)))<0)
+		return -1;
+	
+	return blue_fd;
+}
+#ifdef BLUETOOTH_MAIN
+int main(int argc, char **argv)
+{
+    struct sockaddr_rc  blue_rem_addr = { 0 };
+    char blue_buffer[1024] = { 0 };
+    int blue_fd, blue_fd_client, blue_bytes_read;
+    socklen_t blue_opt = sizeof(blue_rem_addr);
 
+	blue_fd=create_bluetooth_socket();
     // put socket into listening mode
     listen(blue_fd, 1);
 
@@ -43,3 +54,4 @@ int main(int argc, char **argv)
     close(blue_fd);
     return 0;
 }
+#endif
