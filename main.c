@@ -174,13 +174,6 @@ int main(int argc, char *argv[]) {
 				exit(EXIT_FAILURE);
 			}
 
-			//inform user of socket number - used in send and receive commands
-			printf(
-				"New connection , socket fd is %d , ip is : %s , port : %d \n",
-				new_socket, inet_ntoa(address.sin_addr),
-				ntohs(address.sin_port));
-
-
 			//add new socket to array of sockets
 			for (i = 0; i < max_clients; i++) {
 				//if position is empty, create new one
@@ -302,6 +295,7 @@ int main(int argc, char *argv[]) {
 	}
 
 #ifdef MODULE_SERIAL
+	sp_close(my_com_conf->com_port);
 	sp_free_port(my_com_conf->com_port);
 	sp_free_config(my_com_conf->com_conf);
 	my_free(my_com_conf);

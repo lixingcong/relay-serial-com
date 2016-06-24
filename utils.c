@@ -306,6 +306,7 @@ int redirect_from_user_content(user_content_t *in){
 		
 		n=sp_blocking_write(my_com_conf->com_port,in->data,in->data_size,500);
 
+		sp_close(my_com_conf->com_port);
 		sp_free_port(my_com_conf->com_port);
 		sp_free_config(my_com_conf->com_conf);
 		my_free(my_com_conf);
