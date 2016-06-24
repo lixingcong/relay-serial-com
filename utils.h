@@ -31,6 +31,10 @@ void *my_malloc(size_t size);
         ptr = NULL;								\
     } while(0)
 
+#define load_timer(tv)                            \
+	tv.tv_sec = 0;                                \
+	tv.tv_usec = 100*000;
+
 /* 封包用户输入的数据，仿照shadowsocks-libev的封装包格式 */
 typedef struct user_content {
 	int index;		  /* 已发送字节索引 */
@@ -46,7 +50,14 @@ typedef struct user_content {
 	struct sp_port_config *com_conf; /* 串口配置 */
 } user_content_t;
 
-/* 输入192.168.4.1:3333:xxxxdataxxxx 返回一个user_content的指针，使用后记得释放内存 */
+/* 输入数据包 返回一个user_content的指针，将其打包发送者header，使用后记得释放内存 */
+/* 
+   格式：目的地 数据
+   可以接收的data举例：
+   192.168.444.1:3333:xxxxdataxxxx
+   /dev/ttyUSB0:xxxdataxxx
+   [00:11:22:33:44:55]:hellofrombluetooth
+ */
 user_content_t *new_user_content_from_str(char *in, char *header,int direction);
 
 // TCP bind, lack of listen

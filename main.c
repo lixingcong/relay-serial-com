@@ -206,15 +206,15 @@ int main(int argc, char *argv[]) {
 				if(buffer_com[buffer_com_data_size-2]==13 && buffer_com[buffer_com_data_size-1]==10){
 					printf("- - - - - - - - - -\nread from COM ok\n");
 					buffer_com_p[buffer_com_data_size]=0;
-					/* create relay struct: from serial, to ip */
+					
 					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,get_direction(buffer_com));
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
 						printf("  %s",com_devicename);
 						redirect_from_user_content(my_contents[MAXCLIENTS]);
-						my_free(my_contents[MAXCLIENTS]);
 					}
+					my_free(my_contents[MAXCLIENTS]);
 					/* reset buffer offset */
 					buffer_com_data_size=0;
 					buffer_com_p=buffer_com;					
@@ -243,8 +243,8 @@ int main(int argc, char *argv[]) {
 				}else{
 					printf("  %s",blue_sender_MAC);
 					redirect_from_user_content(blue_user_content);
-					my_free(blue_user_content);
 				}
+				my_free(blue_user_content);
 			}else{
 				printf("bluetooth recv data error!\n");
 			}
