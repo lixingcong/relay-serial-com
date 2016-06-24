@@ -98,21 +98,29 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		memcpy(tmp->data,in,tmp->data_size);
 		*(tmp->data+tmp->data_size)=0;
 	}else if(direction==DIR_TO_BLUETOOTH){
-		
 		pch=strchr(in,']');
 		offset[0]=pch-in+1;
 		if(offset[0]!=19){
 			printf("error MAC format in new_content_from_str!\n");
 			return NULL;
 		}
+
+
 		tmp=my_malloc(sizeof(user_content_t));
-		printf("ok!\n");
-		return tmp;
-		/* tmp=my_malloc(sizeof(user_content_t)); */
+		tmp->data_size=(strlen(in)-offset[0]+header_len+1);//额外包含一个':'和结束符'\0'
+		tmp->index=0;
+
+		tmp->data=my_malloc(sizeof(char)*tmp->data_size);
+
 		/*copy MAC address */
-		/* memcpy(tmp->mac,data+1,18); */
-		/* tmp->index=0; */
+		memcpy(tmp->mac,in+1,17);
+		*(tmp->mac+18)=0;
 		
+		memcpy(tmp->data,header,header_len);
+		memcpy(tmp->data+header_len,in+offset[0],tmp->data_size-header_len);
+		
+		/* tmp->index=0; */
+		return tmp;		
 		
 	}else{
 		printf("error direction\n");
@@ -222,4 +230,15 @@ char *get_header_ipv4(char *ip,char *port){
 	memcpy(tmp+len1+1,port,len2);
 	*(tmp+len1+len2+1)=0;
 	return tmp;
+}
+
+/* 返回值只能是到串口，到phone，到蓝牙 */
+int get_direction(char *in){
+	if(in[0]>'0'&&in[0]<'9')
+		return DIR_TO_PHONE;
+	if(in[0]=='[')
+		return DIR_TO_BLUETOOTH;
+	if(in[0]=='/')
+		return DIR_TO_SERIAL;
+	return -1;
 }

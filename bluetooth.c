@@ -70,6 +70,10 @@ int main(){
 		scanf("%s",buf);
 		my=new_user_content_from_str(buf,"fuck",DIR_TO_BLUETOOTH);
 		if(my){
+			printf("mac len is %d,mac sizeof is %d\n",strlen(my->mac),sizeof(my->mac));
+			printf("data len is %d,datasize is %d\n",strlen(my->data),my->data_size);
+
+			my_free(my->data);
 			my_free(my);
 		}else{
 			printf("NULL!\n");

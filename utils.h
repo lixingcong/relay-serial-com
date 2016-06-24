@@ -37,11 +37,11 @@ typedef struct user_content {
 	int data_size;				/* data包的大小 */
 	int direction;				/* 包发送方向 */
 	int fd;						/* 发送到目的 的 文件描述符 */
-	char mac[18];				/* 蓝牙物理地址 */
-	char *device;				/* 串口 设备名称 */
 	char *ip;
 	char *port;
 	char *data;
+	char mac[18];				/* 蓝牙物理地址 */
+	char *device;				/* 串口 设备名称 */
 	struct sp_port *com_port;		/* 串口port结构体 */
 	struct sp_port_config *com_conf; /* 串口配置 */
 } user_content_t;
@@ -57,5 +57,7 @@ int sendall(user_content_t *in);
 
 /* 将ip和port封包 */
 char *get_header_ipv4(char *ip,char *port);
+
+int get_direction(char *in);
 
 #endif
