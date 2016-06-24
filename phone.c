@@ -31,10 +31,10 @@ int main(int argc,char *argv[])
 	int master_socket,new_socket,max_fd; /* 文件描述符 */
 	char *IP,*PORT;				/* socket发送或者监听地址 */
 	if (argc != 3) {
-		#ifdef SERVER_MAIN
+		#ifdef PHONE_SEND
 		fprintf(stderr,"usage: %s dst-ip dst-port\n",argv[0]);
 		#endif
-		#ifdef SERIAL_MAIN
+		#ifdef PHONE_RECV
 		fprintf(stderr,"usage: %s listen-ip listen-port\n",argv[0]);
 		#endif
 		return 1;
@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
 			if(my_content->data_size==send(my_content->fd,my_content->data,my_content->data_size,0))
 				printf("tcp send ok!\n");
 			else
-				printf("sendall fail.\n");
+				printf("send fail.\n");
 		}
 
 		close(my_content->fd);

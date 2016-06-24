@@ -1,3 +1,5 @@
+/* 缺点：无法动态显示自己的蓝牙MAC地址 */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/socket.h>
@@ -9,6 +11,7 @@
 int create_bluetooth_socket(){
 	int blue_fd;
 	struct sockaddr_rc blue_loc_addr = { 0 };
+	char MAC[18];
 	// allocate socket
     if((blue_fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM))<0){
 		printf("error creating socket of bluetooth\n");
@@ -23,7 +26,8 @@ int create_bluetooth_socket(){
 	
     if((bind(blue_fd, (struct sockaddr *)&blue_loc_addr, sizeof(blue_loc_addr)))<0)
 		return -1;
-	
+	ba2str( &blue_loc_addr.rc_bdaddr, MAC );
+	printf("%s on channel 1 listens for connections...\n",MAC);
 	return blue_fd;
 }
 #ifdef BLUETOOTH_RECV
@@ -91,49 +95,6 @@ int main(int argc, char **argv)
 	}
 
 	return 0;
-}
-
-#endif
-
-
-/* 这个是测试utils.c中的，与蓝牙无关！！ */
-#ifdef TEST_DIRECTION
-
-int main(){
-    char buf[100];
-	user_content_t *my;
-	int d;
-	
-	while(1){
-		scanf("%s",buf);
-		d=get_direction(buf);
-		my=new_user_content_from_str(buf,"fuck",DIR_TO_SERVER);
-		/* my=new_user_content_from_str(buf,"fuck",d); */
-		if(my){
-			puts(my->data);
-			printf("data len is %d,datasize is %d\n",strlen(my->data),my->data_size);
-
-			if(my->direction==DIR_TO_PHONE){
-				puts(my->ip);
-				printf("ip len %d, size %d\n",strlen(my->ip),sizeof(*my->ip));
-				puts(my->port);
-				printf("port len %d, size %d\n",strlen(my->port),sizeof(*my->port));
-				my_free(my->ip);
-				my_free(my->port);
-			}else if(my->direction==DIR_TO_SERIAL){
-				puts(my->device);
-				printf("dev len %d, size %d\n",strlen(my->device),sizeof(*my->device));
-				my_free(my->device);				
-			}else if(my->direction==DIR_TO_BLUETOOTH){
-				puts(my->mac);
-			}
-			my_free(my);
-		}else{
-			printf("NULL!\n");
-		}
-
-	}
-    return 0;
 }
 
 #endif

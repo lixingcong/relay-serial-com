@@ -26,15 +26,18 @@ all: $(OBJS)
 
 # serial <----- main <------ phone
 	$(CC) -c phone.c -DPHONE_SEND
-	$(CC) -o phone_send phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
+	$(CC) -o phone_send phone.o utils.o serial_server.o $(LDFLAGS)
+	rm phone.o
 
 # serial -----> main ------> phone
 	$(CC) -c phone.c -DPHONE_RECV
-	$(CC) -o phone_recv phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
+	$(CC) -o phone_recv phone.o utils.o serial_server.o $(LDFLAGS)
+	rm phone.o
 
 # bluetooth-server recv data
 	$(CC) -c bluetooth.c -DBLUETOOTH_RECV
 	$(CC) -o blue_recv bluetooth.o utils.o serial_server.o $(LDFLAGS)
+	rm bluetooth.o
 
 # bluetooth-client send data
 	$(CC) -c bluetooth.c -DBLUETOOTH_SEND
