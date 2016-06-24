@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-23 00:44:44 >
+//Time-stamp: < serial_server.c 2016-06-24 18:58:40 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -16,46 +16,46 @@
 #include "serial_server.h"
 
 
-com_port_t *open_com(char *devicename){
-	com_port_t *tmp=my_malloc(sizeof(com_port_t));
+user_content_t *open_com(char *devicename){
+	user_content_t *tmp=my_malloc(sizeof(user_content_t));
 	/* 打开设备 */
-    if(sp_get_port_by_name(devicename, &(tmp->port)) != SP_OK){
+    if(sp_get_port_by_name(devicename, &(tmp->com_port)) != SP_OK){
         fprintf(stderr, "Cannot find the serial port %s\n",devicename);
-		sp_free_port(tmp->port);
+		sp_free_port(tmp->com_port);
 		my_free(tmp);
 		return NULL;
     }
 
 	/* 打开串口 */
-    if(sp_open(tmp->port, SP_MODE_READ_WRITE) != SP_OK) {
+    if(sp_open(tmp->com_port, SP_MODE_READ_WRITE) != SP_OK) {
         fprintf(stderr, "Cannot open the serial port %s\n",devicename);
-		sp_free_port(tmp->port);
+		sp_free_port(tmp->com_port);
 		my_free(tmp);
 		return NULL;
     }
 	
 	/* 文件描述符 */
-	if(sp_get_port_handle(tmp->port,&(tmp->fd))!=SP_OK){
+	if(sp_get_port_handle(tmp->com_port,&(tmp->fd))!=SP_OK){
 		fprintf(stderr, "Cannot get the serial port fd\n");
-		sp_free_port(tmp->port);
+		sp_free_port(tmp->com_port);
 		my_free(tmp);
 		return NULL;
 	}else{
 		printf("open %s ok, the fd is %d\n",devicename,tmp->fd);
 	}
 	/* 配置结构体 */
-    sp_new_config(&(tmp->conf));
-    sp_set_config_baudrate(tmp->conf, 115200);
-    sp_set_config_parity(tmp->conf, SP_PARITY_NONE);
-    sp_set_config_bits(tmp->conf, 8);
-    sp_set_config_stopbits(tmp->conf, 1);
-    sp_set_config_flowcontrol(tmp->conf, SP_FLOWCONTROL_NONE);
+    sp_new_config(&(tmp->com_conf));
+    sp_set_config_baudrate(tmp->com_conf, 115200);
+    sp_set_config_parity(tmp->com_conf, SP_PARITY_NONE);
+    sp_set_config_bits(tmp->com_conf, 8);
+    sp_set_config_stopbits(tmp->com_conf, 1);
+    sp_set_config_flowcontrol(tmp->com_conf, SP_FLOWCONTROL_NONE);
 
 	/* 设置串口 */
-	if(sp_set_config(tmp->port, tmp->conf) != SP_OK){
+	if(sp_set_config(tmp->com_port, tmp->com_conf) != SP_OK){
         fprintf(stderr, "Cannot configure the serial port\n");
-		sp_free_port(tmp->port);
-		sp_free_config(tmp->conf);
+		sp_free_port(tmp->com_port);
+		sp_free_config(tmp->com_conf);
 		my_free(tmp);
 		return NULL;
     }

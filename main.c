@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
 	/* 串口部份 固定变量 */
 	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
-	com_port_t *my_com_conf;/* 串口配置 */
+	user_content_t *my_com_conf=my_malloc(sizeof(user_content_t));/* 串口配置 */
 	
 	/* 串口部份 动态变量 */
 #ifdef MODULE_SERIAL
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
 		// 串口读
 		if (FD_ISSET(my_com_conf->fd, &readfds)) {
 			/* 非阻塞读取 */
-			valread=sp_nonblocking_read(my_com_conf->port,buffer_com_p+buffer_com_data_size,MAXLEN);
+			valread=sp_nonblocking_read(my_com_conf->com_port,buffer_com_p+buffer_com_data_size,MAXLEN);
 			if(valread<0){
 				printf("read data from com error: %d\n",valread);
 				return 1;
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 					printf("- - - - - - - - - -\nread from COM ok\n");
 					buffer_com_p[buffer_com_data_size]=0;
 					/* create relay struct: from serial, to ip */
-					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,DIR_TO_PHONE);
+					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,get_direction(buffer_com));
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
@@ -229,13 +229,13 @@ int main(int argc, char *argv[]) {
 							printf("getaddrinfo error!\n");
 							/* return 1; */
 						}else{
-							if((new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
+							if((my_contents[MAXCLIENTS]->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
 								/* connect! */
-								if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+								if(connect(my_contents[MAXCLIENTS]->fd, res->ai_addr, res->ai_addrlen)<0){
 									/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 									perror("connect error");
 								}else{
-									if(0==sendall(new_socket,my_contents[MAXCLIENTS]))
+									if(0==sendall(my_contents[MAXCLIENTS]))
 										printf("    tcp relay ok!\n");
 									else
 										printf("    sendall fail.\n");
@@ -256,6 +256,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 #endif
+
+#ifdef MODULE_BLUETOOTH
 		// 蓝牙读
 		if(FD_ISSET(blue_fd,&readfds)){
 			// accept one connection
@@ -274,6 +276,7 @@ int main(int argc, char *argv[]) {
 			// close connection
 			close(blue_fd_client);
 		}
+#endif		
 		
 		//else its some IO operation on some other socket :)
 		for (i = 0; i < max_clients; i++) {
@@ -296,19 +299,20 @@ int main(int argc, char *argv[]) {
 					sprintf(itoa_buffer,"%d",ntohs(address.sin_port));
 					header=get_header_ipv4(inet_ntoa(address.sin_addr), itoa_buffer);
 					/* create relay struct: from LAN ip, to serial */
-					my_contents[i]=new_user_content_from_str(buffer[i],header,DIR_TO_SERIAL);
+					my_contents[i]=new_user_content_from_str(buffer[i],header,get_direction(buffer[i]));
 					my_free(header);
 					
 					if(!my_contents[i]){
 						printf("invalid packet!\n");					
 					}else{
+						puts(my_contents[i]->device);
 						// 输入合法性只能在打开串口时候判断！
 						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备
 						if(strcmp(my_contents[i]->device,com_devicename)!=0){
 							printf("not such COM device: %s\n",my_contents[i]->device);
 						}else{
 							printf("  %s    ----> %s\n",my_contents[i]->data,my_contents[i]->device);
-							if(sp_blocking_write(my_com_conf->port,my_contents[i]->data,my_contents[i]->data_size,500)<0)
+							if(sp_blocking_write(my_com_conf->com_port,my_contents[i]->data,my_contents[i]->data_size,500)<0)
 								printf("    write to %s fail!\n",my_contents[i]->device);
 							else
 								printf("    write COM ok!\n");
@@ -316,8 +320,8 @@ int main(int argc, char *argv[]) {
 						/* now relay to serial */
 						my_free(my_contents[i]->data);
 						my_free(my_contents[i]->device);
-						my_free(my_contents[i]);
 					}
+					my_free(my_contents[i]);
 						
 				}else {
 					/* 累加数据 */
@@ -328,8 +332,8 @@ int main(int argc, char *argv[]) {
 	}
 
 #ifdef MODULE_SERIAL
-	sp_free_port(my_com_conf->port);
-	sp_free_config(my_com_conf->conf);
+	sp_free_port(my_com_conf->com_port);
+	sp_free_config(my_com_conf->com_conf);
 	my_free(my_com_conf);
 #endif
 

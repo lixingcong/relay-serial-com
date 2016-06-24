@@ -4,7 +4,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
-#include "bluetooth.h"
+/* #include "bluetooth.h" */
+#include "utils.h"
 
 int create_bluetooth_socket(){
 	int blue_fd;
@@ -56,4 +57,45 @@ int main(int argc, char **argv)
     close(blue_fd);
     return 0;
 }
+#endif
+
+#ifdef TEST_DIRECTION
+
+int main(){
+    char buf[100];
+	user_content_t *my;
+	int d;
+	
+	while(1){
+		scanf("%s",buf);
+		d=get_direction(buf);
+		my=new_user_content_from_str(buf,"fuck",DIR_TO_SERVER);
+		/* my=new_user_content_from_str(buf,"fuck",d); */
+		if(my){
+			puts(my->data);
+			printf("data len is %d,datasize is %d\n",strlen(my->data),my->data_size);
+
+			if(my->direction==DIR_TO_PHONE){
+				puts(my->ip);
+				printf("ip len %d, size %d\n",strlen(my->ip),sizeof(*my->ip));
+				puts(my->port);
+				printf("port len %d, size %d\n",strlen(my->port),sizeof(*my->port));
+				my_free(my->ip);
+				my_free(my->port);
+			}else if(my->direction==DIR_TO_SERIAL){
+				puts(my->device);
+				printf("dev len %d, size %d\n",strlen(my->device),sizeof(*my->device));
+				my_free(my->device);				
+			}else if(my->direction==DIR_TO_BLUETOOTH){
+				puts(my->mac);
+			}
+			my_free(my);
+		}else{
+			printf("NULL!\n");
+		}
+
+	}
+    return 0;
+}
+
 #endif

@@ -69,23 +69,23 @@ int main(int argc,char *argv[])
 			printf("getaddrinfo error!\n");
 			return 1;
 		}
-		new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		my_content->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 		/* connect! */
-		if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+		if(connect(my_content->fd, res->ai_addr, res->ai_addrlen)<0){
 			/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 			perror("connect error");
 		}else{
-			if(0==sendall(new_socket,my_content))
+			if(0==sendall(my_content))
 				printf("tcp send ok!\n");
 			else
 				printf("sendall fail.\n");
 		}
 
-
+		close(my_content->fd);
 		my_free(my_content->data);
 		my_free(my_content);
-		close(new_socket);
+
 	}
 	
 	return 0;

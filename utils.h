@@ -19,6 +19,7 @@
 #define DIR_TO_PHONE 0
 #define DIR_TO_SERIAL 1
 #define DIR_TO_SERVER 2
+#define DIR_TO_BLUETOOTH 3
 
 /* 申请内存 */
 void *my_malloc(size_t size);
@@ -34,23 +35,29 @@ void *my_malloc(size_t size);
 typedef struct user_content {
 	int index;		  /* 已发送字节索引 */
 	int data_size;				/* data包的大小 */
-	int direction;				/* 发送方向：到ip，到串口，到局域网设备 */
-	char *device;				/* 串口 蓝牙 设备名称 */
+	int direction;				/* 包发送方向 */
+	int fd;						/* 发送到目的 的 文件描述符 */
 	char *ip;
 	char *port;
 	char *data;
+	char mac[18];				/* 蓝牙物理地址 */
+	char *device;				/* 串口 设备名称 */
+	struct sp_port *com_port;		/* 串口port结构体 */
+	struct sp_port_config *com_conf; /* 串口配置 */
 } user_content_t;
 
 /* 输入192.168.4.1:3333:xxxxdataxxxx 返回一个user_content的指针，使用后记得释放内存 */
-user_content_t *new_user_content_from_str(char *in, char *header, int direction);
+user_content_t *new_user_content_from_str(char *in, char *header,int direction);
 
 // TCP bind, lack of listen
 int create_server_socket(const char *host,const char *port);
 
 /* 将user_content的内容全部发送出去 阻塞操作*/
-int sendall(int s, user_content_t *in);
+int sendall(user_content_t *in);
 
 /* 将ip和port封包 */
 char *get_header_ipv4(char *ip,char *port);
+
+int get_direction(char *in);
 
 #endif

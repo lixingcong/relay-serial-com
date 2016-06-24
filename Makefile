@@ -21,14 +21,17 @@ all: $(OBJS)
 
 # serial -----> main ------> phone
 	$(CC) -c phone.c -DSERVER_MAIN 
-	$(CC) -o phone_send phone.o utils.o
+	$(CC) -o phone_send phone.o utils.o $(LDFLAGS)
 
 # serial <----- main <------ phone
 	$(CC) -c phone.c -DSERIAL_MAIN 
-	$(CC) -o phone_recv phone.o utils.o
+	$(CC) -o phone_recv phone.o utils.o $(LDFLAGS)
+
+#	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
+#	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS) -DTEST_DIRECTION
 
 .PHONY: clean run
 
