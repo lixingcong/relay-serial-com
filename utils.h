@@ -60,4 +60,7 @@ char *get_header_ipv4(char *ip,char *port);
 
 int get_direction(char *in);
 
+/* 重定向 */
+int redirect_from_user_content(user_content_t *in);
+
 #endif

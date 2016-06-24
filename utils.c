@@ -252,3 +252,55 @@ int get_direction(char *in){
 		return DIR_TO_SERIAL;
 	return -1;
 }
+
+// 转发包，前提是user_content要满足非NULL的条件
+int redirect_from_user_content(user_content_t *in){
+	struct addrinfo hints, *res; /* 连接到target的用到的 */
+	
+	switch (in->direction){		
+	case DIR_TO_PHONE:
+		printf("  %s    ---->  %s:%s\n",in->data,in->ip,in->port);
+		memset(&hints, 0, sizeof hints);
+		hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_PASSIVE; // fill in my IP for me
+
+		if (getaddrinfo(in->ip, in->port, &hints, &res) != 0) {
+			printf("getaddrinfo error!\n");
+		}else{
+			if((in->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
+				/* connect! */
+				if(connect(in->fd, res->ai_addr, res->ai_addrlen)<0){
+					/* 这里应该返回结果 告诉来源：目标拒绝连接 */
+					perror("connect error");
+				}else{
+					if(0==sendall(in))
+						printf("    tcp relay ok!\n");
+					else
+						printf("    sendall fail.\n");
+				}
+				close(in->fd);
+			}else{
+				perror("socket create error");
+			}
+		}
+		my_free(in->ip);
+		my_free(in->port);
+		my_free(in->data);
+		break;
+#ifdef MODULE_BLUETOOTH
+	case DIR_TO_BLUETOOTH:
+		
+		break;
+#endif
+		
+#ifdef MODULE_SERIAL		
+	case DIR_TO_SERIAL:
+		break;
+#endif		
+	default:
+		printf("error direction!=n");
+		return -1;
+		break;
+	}
+}

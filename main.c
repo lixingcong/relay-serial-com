@@ -217,36 +217,7 @@ int main(int argc, char *argv[]) {
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
-						// 输入合法性只能在打开远程ip时候判断！
-						printf("  %s    ---->  %s:%s\n",my_contents[MAXCLIENTS]->data,my_contents[MAXCLIENTS]->ip,my_contents[MAXCLIENTS]->port);
-						/* now relay to target : to LAN ip */
-						memset(&hints, 0, sizeof hints);
-						hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
-						hints.ai_socktype = SOCK_STREAM;
-						hints.ai_flags = AI_PASSIVE; // fill in my IP for me
-
-						if (getaddrinfo(my_contents[MAXCLIENTS]->ip, my_contents[MAXCLIENTS]->port, &hints, &res) != 0) {
-							printf("getaddrinfo error!\n");
-							/* return 1; */
-						}else{
-							if((my_contents[MAXCLIENTS]->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol))>0){
-								/* connect! */
-								if(connect(my_contents[MAXCLIENTS]->fd, res->ai_addr, res->ai_addrlen)<0){
-									/* 这里应该返回结果 告诉来源：目标拒绝连接 */
-									perror("connect error");
-								}else{
-									if(0==sendall(my_contents[MAXCLIENTS]))
-										printf("    tcp relay ok!\n");
-									else
-										printf("    sendall fail.\n");
-								}
-								close(new_socket);
-							}
-							
-						}
-						my_free(my_contents[MAXCLIENTS]->ip);
-						my_free(my_contents[MAXCLIENTS]->port);
-						my_free(my_contents[MAXCLIENTS]->data);
+						redirect_from_user_content(my_contents[MAXCLIENTS]);
 						my_free(my_contents[MAXCLIENTS]);
 					}
 					/* reset buffer offset */
@@ -305,21 +276,7 @@ int main(int argc, char *argv[]) {
 					if(!my_contents[i]){
 						printf("invalid packet!\n");					
 					}else{
-						puts(my_contents[i]->device);
-						// 输入合法性只能在打开串口时候判断！
-						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备
-						if(strcmp(my_contents[i]->device,com_devicename)!=0){
-							printf("not such COM device: %s\n",my_contents[i]->device);
-						}else{
-							printf("  %s    ----> %s\n",my_contents[i]->data,my_contents[i]->device);
-							if(sp_blocking_write(my_com_conf->com_port,my_contents[i]->data,my_contents[i]->data_size,500)<0)
-								printf("    write to %s fail!\n",my_contents[i]->device);
-							else
-								printf("    write COM ok!\n");
-						}
-						/* now relay to serial */
-						my_free(my_contents[i]->data);
-						my_free(my_contents[i]->device);
+						redirect_from_user_content(my_contents[i]);
 					}
 					my_free(my_contents[i]);
 						
