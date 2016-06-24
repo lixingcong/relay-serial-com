@@ -65,10 +65,10 @@ int main(int argc, char *argv[]) {
 
 	/* 蓝牙部份 */
 #ifdef MODULE_BLUETOOTH
-	struct sockaddr_rc blue_loc_addr = { 0 }, blue_rem_addr = { 0 };
+	struct sockaddr_rc blue_rem_addr = { 0 };
 	char blue_buffer[MAXLEN];
 	int blue_fd,blue_fd_client,blue_bytes_read;
-	socklen_t blue_opt;
+	socklen_t blue_opt=sizeof(blue_rem_addr);
 #endif
 
 	/* args参数 */
@@ -96,6 +96,7 @@ int main(int argc, char *argv[]) {
 		printf("error bluetooth fd is -1\n");
 		return -1;
 	}
+	listen(blue_fd, 1);
 #endif
 
 	//initialise all client_socket[] to 0 so not checked
@@ -255,6 +256,24 @@ int main(int argc, char *argv[]) {
 			}
 		}
 #endif
+		// 蓝牙读
+		if(FD_ISSET(blue_fd,&readfds)){
+			// accept one connection
+			blue_fd_client = accept(blue_fd, (struct sockaddr *)&blue_rem_addr, &blue_opt);
+
+			ba2str( &blue_rem_addr.rc_bdaddr, blue_buffer );
+			fprintf(stderr, "accepted connection from %s\n", blue_buffer);
+			memset(blue_buffer, 0, sizeof(blue_buffer));
+
+			// read data from the client
+			blue_bytes_read = read(blue_fd_client, blue_buffer, sizeof(blue_buffer));
+			if( blue_bytes_read > 0 ) {
+				printf("received [%s]\n", blue_buffer);
+			}
+
+			// close connection
+			close(blue_fd_client);
+		}
 		
 		//else its some IO operation on some other socket :)
 		for (i = 0; i < max_clients; i++) {
@@ -313,7 +332,12 @@ int main(int argc, char *argv[]) {
 	sp_free_config(my_com_conf->conf);
 	my_free(my_com_conf);
 #endif
+
+#ifdef MODULE_BLUETOOTH
+	close(blue_fd);
+#endif
 	
+	close(master_socket);
 	printf("exit..\n");
 	return 0;
 }
