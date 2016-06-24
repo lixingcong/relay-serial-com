@@ -1,4 +1,4 @@
-LDFLAGS=-lserialport
+LDFLAGS=-lserialport -lbluetooth
 CFLAGS=
 DEFINEFLAGS=
 
@@ -14,6 +14,7 @@ OBJS+=main.o
 OBJS+=serial_server.o
 #OBJS+=phone.o
 OBJS+=utils.o
+OBJS+=bluetooth.o
 
 all: $(OBJS)
 	$(CC) -o main main.o utils.o serial_server.o $(LDFLAGS)
@@ -23,6 +24,7 @@ all: $(OBJS)
 	$(CC) -o phone_recv phone.o utils.o
 #	$(CC) -o serial_server serial_server.o utils.o $(LDFLAGS)
 #	$(CC) -o main main.o utils.o $(LDFLAGS)
+	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
