@@ -39,6 +39,7 @@ all: $(OBJS)
 # bluetooth-client send data
 	$(CC) -c bluetooth.c -DBLUETOOTH_SEND
 	$(CC) -o blue_send bluetooth.o utils.o serial_server.o $(LDFLAGS)
+	rm bluetooth.o
 
 # operate a /dev/ttyUSB0 to send data
 	$(CC) -o serial_send serial_server.c utils.o $(LDFLAGS) -DSERIAL_SEND
