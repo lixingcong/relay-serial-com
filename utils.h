@@ -52,15 +52,12 @@ user_content_t *new_user_content_from_str(char *in, char *header,int direction);
 // TCP bind, lack of listen
 int create_server_socket(const char *host,const char *port);
 
-/* 将user_content的内容全部发送出去 阻塞操作*/
-int sendall(user_content_t *in);
-
 /* 将ip和port封包 */
 char *get_header_ipv4(char *ip,char *port);
 
 int get_direction(char *in);
 
-/* 重定向 */
+/* 重定向流量 */
 int redirect_from_user_content(user_content_t *in);
 
 #endif

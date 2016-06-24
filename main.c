@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
 					memset(buffer_p[i],0,MAXLEN);
 					buffer_data_size[i]=0;
 					
-					printf("Adding to list of sockets as %d\n", i);
+					printf("accepted #%d client\n", i);
 					break;
 				}
 			}
@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
 					buffer[i][buffer_data_size[i]]=0;
 					getpeername(sd, (struct sockaddr*) &address,
 								(socklen_t*) &addrlen);
-					printf("- - - - - - - - - -\nrecv %d bytes form LAN client\n",buffer_data_size[i]);
+					printf("- - - - - - - - - -\nread %d bytes from LAN client\n",buffer_data_size[i]);
 
 					//Close the socket and mark as 0 in list for reuse
 					close(sd);

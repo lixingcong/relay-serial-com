@@ -134,7 +134,7 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		return tmp;		
 		
 	}else{
-		printf("error direction\n");
+		printf("para direction is not in the range.\n");
 		return NULL;
 	}
 
@@ -181,7 +181,7 @@ int create_server_socket(const char *host,const char *port){
 	}
 
 	if (rp == NULL) {
-        LOGE("[udp] cannot bind");
+        LOGE("[tcp] cannot bind");
         return -1;
     }
     freeaddrinfo(result);
@@ -189,25 +189,7 @@ int create_server_socket(const char *host,const char *port){
 }
 
 
-/* 将user_content的内容全部发送出去 根据direction 阻塞操作*/
-int sendall(user_content_t *in){
-	int n,s;
-	struct sockaddr_rc addr = { 0 };
-	if(in->direction==DIR_TO_SERVER || in->direction==DIR_TO_PHONE){ /* 发送到ip */
-
-	}else if(in->direction==DIR_TO_SERIAL){
-		
-	}else if(in->direction==DIR_TO_BLUETOOTH){
-		
-		
-		return n;
-	}else{
-		printf("error diretion in sendall!\n");
-	}
-
-	return -1;
-}
-
+/* 字符串拼接 */
 char *get_header_ipv4(char *ip,char *port){
 	int len1=strlen(ip);
 	int len2=strlen(port);
@@ -230,7 +212,8 @@ int get_direction(char *in){
 	return -1;
 }
 
-// 转发包，前提是user_content要满足非NULL的条件
+/* 转发包，前提是user_content要满足非NULL的条件 */
+/* 将user_content的内容全部发送出去 根据in->direction判断方向  阻塞操作*/
 int redirect_from_user_content(user_content_t *in){
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_rc addr = { 0 }; /* 蓝牙 */
@@ -318,7 +301,7 @@ int redirect_from_user_content(user_content_t *in){
 		break;
 #endif		
 	default:
-		printf("error direction!=n");
+		printf("\nwrong or unsupported direction!\n");
 		return -1;
 		break;
 	}
