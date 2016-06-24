@@ -1,4 +1,4 @@
-//Time-stamp: < serial_server.c 2016-06-25 00:01:52 >
+//Time-stamp: < serial_server.c 2016-06-25 00:56:27 >
 /*说明：串口端的接收数据，模拟串口
  */
 #include <stdio.h>
@@ -127,6 +127,8 @@ int main(){
 	}
 
 #ifdef SERIAL_RECV
+	printf("waiting for COM data...\n");
+
 	FD_ZERO(&readfds);
 	FD_SET(serialfd,&readfds);
 	
@@ -147,7 +149,7 @@ int main(){
 #ifdef SERIAL_SEND
 /* 返回值是写入成功的字节数目 */
 	while(1){
-		printf("input str:\n");
+		printf("input str to send:\n");
 		scanf("%s",buffer);
 		i=strlen(buffer);
 		/* 使得从终端输入的以\r\n结尾 */

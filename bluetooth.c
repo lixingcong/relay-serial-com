@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 		if( status == 0 ) {
 			status = write(s, buffer, strlen(buffer));
 		}
-		if( status < 0 ) perror("uh oh");
+		if( status < 0 ) perror("send fail\n");
 
 		close(s);
 	}
