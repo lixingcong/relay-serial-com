@@ -23,6 +23,7 @@
 
 #include "utils.h"
 #include "serial_server.h"
+#include "bluetooth.h"
 
 #define TRUE   1
 #define FALSE  0
@@ -41,15 +42,6 @@ int main(int argc, char *argv[]) {
 	//set of socket descriptors
 	fd_set readfds;
 
-	/* 串口部份 */
-	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
-	com_port_t *my_com_conf;/* 串口配置 */
-	char buffer_com[MAXLEN];	/* 串口缓冲区 */
-	char *buffer_com_p=buffer_com;
-	char *header=NULL;			/* 封包的header */
-	char itoa_buffer[8];
-	int buffer_com_data_size=0;
-
 	/* IP部份 */
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
 	struct sockaddr_in address;
@@ -57,13 +49,27 @@ int main(int argc, char *argv[]) {
 	char buffer[MAXCLIENTS][MAXLEN];
 	char *buffer_p[MAXCLIENTS];  //data buffer of 1K
 	int buffer_data_size[MAXCLIENTS];
+	char itoa_buffer[8];		/* ip地址从网络顺序转成char数组 */
+	char *header=NULL;			/* 将转换好的ip地址：封包成header */
+
+	/* 串口部份 固定变量 */
+	char com_devicename[]="/dev/ttyUSB0"; /* 固定的linux串口设备文件 */
+	com_port_t *my_com_conf;/* 串口配置 */
+	
+	/* 串口部份 动态变量 */
+#ifdef MODULE_SERIAL
+	char buffer_com[MAXLEN];	/* 串口缓冲区 */
+	char *buffer_com_p=buffer_com;
+	int buffer_com_data_size=0;
+#endif
 
 	/* 蓝牙部份 */
+#ifdef MODULE_BLUETOOTH
 	struct sockaddr_rc blue_loc_addr = { 0 }, blue_rem_addr = { 0 };
 	char blue_buffer[MAXLEN];
 	int blue_fd,blue_fd_client,blue_bytes_read;
 	socklen_t blue_opt;
-	
+#endif
 
 	/* args参数 */
 	char *PORT;
@@ -75,11 +81,22 @@ int main(int argc, char *argv[]) {
 	
 	PORT=argv[1];
 
+#ifdef MODULE_SERIAL
 	/* 打开串口，须root权限 */
 	if(NULL==(my_com_conf=open_com(com_devicename))){
 		printf("error open com!\n");
 		return 1;
 	}
+#endif
+
+#ifdef MODULE_BLUETOOTH
+	/* 打开蓝牙 */
+	blue_fd=create_bluetooth_socket();
+	if(blue_fd<0){
+		printf("error bluetooth fd is -1\n");
+		return -1;
+	}
+#endif
 
 	//initialise all client_socket[] to 0 so not checked
 	for (i = 0; i < max_clients; i++) {
@@ -112,12 +129,19 @@ int main(int argc, char *argv[]) {
 	while (TRUE) {
 		//clear the socket set
 		FD_ZERO(&readfds);
-
 		//add master socket to set
 		FD_SET(master_socket, &readfds);
-		FD_SET(my_com_conf->fd,&readfds);
+		max_sd =master_socket;
 		
-		max_sd = master_socket>my_com_conf->fd?master_socket:my_com_conf->fd;
+#ifdef MODULE_SERIAL
+		FD_SET(my_com_conf->fd,&readfds);
+		max_sd = max_sd>my_com_conf->fd?max_sd:my_com_conf->fd;
+#endif
+
+#ifdef MODULE_BLUETOOTH
+		FD_SET(blue_fd,&readfds);
+		max_sd = max_sd>blue_fd?max_sd:blue_fd;
+#endif
 
 		//add child sockets to set
 		for (i = 0; i < max_clients; i++) {
@@ -171,6 +195,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+#ifdef MODULE_SERIAL
 		// 串口读
 		if (FD_ISSET(my_com_conf->fd, &readfds)) {
 			/* 非阻塞读取 */
@@ -229,6 +254,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
+#endif
 		
 		//else its some IO operation on some other socket :)
 		for (i = 0; i < max_clients; i++) {
@@ -282,9 +308,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+#ifdef MODULE_SERIAL
 	sp_free_port(my_com_conf->port);
 	sp_free_config(my_com_conf->conf);
 	my_free(my_com_conf);
+#endif
 	
 	printf("exit..\n");
 	return 0;

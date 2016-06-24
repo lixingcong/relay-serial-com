@@ -4,6 +4,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
+#include "bluetooth.h"
+
 int create_bluetooth_socket(){
 	int blue_fd;
 	struct sockaddr_rc blue_loc_addr = { 0 };
