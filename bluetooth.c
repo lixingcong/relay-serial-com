@@ -4,7 +4,6 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 
-/* #include "bluetooth.h" */
 #include "utils.h"
 
 int create_bluetooth_socket(){
@@ -27,7 +26,7 @@ int create_bluetooth_socket(){
 	
 	return blue_fd;
 }
-#ifdef BLUETOOTH_MAIN
+#ifdef BLUETOOTH_RECV
 int main(int argc, char **argv)
 {
     struct sockaddr_rc  blue_rem_addr = { 0 };
@@ -59,6 +58,41 @@ int main(int argc, char **argv)
 }
 #endif
 
+
+#ifdef BLUETOOTH_SEND
+int main(int argc, char **argv)
+{
+	struct sockaddr_rc addr = { 0 };
+	int s, status;
+	char dest[18] = "00:15:83:3D:0A:57";//send to 李剑's bluetooth设备
+	char buffer[2000];
+
+// allocate a socket
+	s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+
+// set the connection parameters (who to connect to)
+	addr.rc_family = AF_BLUETOOTH;
+	addr.rc_channel = (uint8_t) 1;
+	str2ba( dest, &addr.rc_bdaddr );
+
+	while(1){
+		printf("input str to send:\n");
+		scanf("%s",buffer);
+		status = connect(s, (struct sockaddr *)&addr, sizeof(addr));
+		if( status == 0 ) {
+			status = write(s, buffer, strlen(buffer));
+		}
+		if( status < 0 ) perror("uh oh");
+	}
+
+	close(s);
+	return 0;
+}
+
+#endif
+
+
+/* 这个是测试utils.c中的，与蓝牙无关！！ */
 #ifdef TEST_DIRECTION
 
 int main(){

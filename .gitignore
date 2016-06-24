@@ -1,8 +1,11 @@
 *.o
 .#*
+.*-swp
 main
 serial_server
+serial_send
 phone_recv
 phone_send
 blue_recv
+blue_send
 dd.txt

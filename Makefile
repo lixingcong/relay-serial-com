@@ -27,7 +27,13 @@ all: $(OBJS)
 	$(CC) -c phone.c -DSERIAL_MAIN 
 	$(CC) -o phone_recv phone.o utils.o serial_server.o bluetooth.o $(LDFLAGS)
 
-#	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
+	$(CC) -c bluetooth.c -DBLUETOOTH_RECV
+	$(CC) -o blue_recv bluetooth.o utils.o $(LDFLAGS)
+
+	$(CC) -c bluetooth.c -DBLUETOOTH_SEND
+	$(CC) -o blue_send bluetooth.o utils.o $(LDFLAGS)
+
+	$(CC) -o serial_send serial_server.c utils.o $(LDFLAGS) -DSERIAL_SEND
 
 $(OBJS):%.o: %.c
 	$(CC) -c $< -o $*.o $(LDFLAGS) $(DEFINEFLAGS)
@@ -38,6 +44,7 @@ $(OBJS):%.o: %.c
 clean:
 	rm -rf $(OBJS) phone.o
 	rm -rf main phone phone_recv phone_send serial_server blue_recv
+	rm -rf serial_send
 
 run:all
 	./main

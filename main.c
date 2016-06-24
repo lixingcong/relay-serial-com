@@ -66,9 +66,10 @@ int main(int argc, char *argv[]) {
 	/* 蓝牙部份 */
 #ifdef MODULE_BLUETOOTH
 	struct sockaddr_rc blue_rem_addr = { 0 };
-	char blue_buffer[MAXLEN];
+	char blue_buffer[MAXLEN],blue_sender_MAC[18];
 	int blue_fd,blue_fd_client,blue_bytes_read;
 	socklen_t blue_opt=sizeof(blue_rem_addr);
+	user_content_t *blue_user_content;
 #endif
 
 	/* args参数 */
@@ -217,6 +218,7 @@ int main(int argc, char *argv[]) {
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
+						printf("  %s",com_devicename);
 						redirect_from_user_content(my_contents[MAXCLIENTS]);
 						my_free(my_contents[MAXCLIENTS]);
 					}
@@ -234,14 +236,24 @@ int main(int argc, char *argv[]) {
 			// accept one connection
 			blue_fd_client = accept(blue_fd, (struct sockaddr *)&blue_rem_addr, &blue_opt);
 
-			ba2str( &blue_rem_addr.rc_bdaddr, blue_buffer );
-			fprintf(stderr, "accepted connection from %s\n", blue_buffer);
-			memset(blue_buffer, 0, sizeof(blue_buffer));
-
+			ba2str( &blue_rem_addr.rc_bdaddr, blue_sender_MAC );
+			
 			// read data from the client
 			blue_bytes_read = read(blue_fd_client, blue_buffer, sizeof(blue_buffer));
 			if( blue_bytes_read > 0 ) {
-				printf("received [%s]\n", blue_buffer);
+				printf("- - - - - - - - - -\nread from bluetooth ok\n");
+				blue_buffer[blue_bytes_read]=0;
+				
+				blue_user_content=new_user_content_from_str(blue_buffer,blue_sender_MAC,get_direction(blue_buffer));
+				if(!blue_user_content){
+					printf("invalid packet!\n");
+				}else{
+					printf("  %s",blue_sender_MAC);
+					redirect_from_user_content(blue_user_content);
+					my_free(blue_user_content);
+				}
+			}else{
+				printf("bluetooth recv data error!\n");
 			}
 
 			// close connection
@@ -271,13 +283,14 @@ int main(int argc, char *argv[]) {
 					header=get_header_ipv4(inet_ntoa(address.sin_addr), itoa_buffer);
 					/* create relay struct: from LAN ip, to serial */
 					my_contents[i]=new_user_content_from_str(buffer[i],header,get_direction(buffer[i]));
-					my_free(header);
 					
 					if(!my_contents[i]){
 						printf("invalid packet!\n");					
 					}else{
+						printf("  %s",header);
 						redirect_from_user_content(my_contents[i]);
 					}
+					my_free(header);
 					my_free(my_contents[i]);
 						
 				}else {

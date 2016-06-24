@@ -48,7 +48,7 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		if(occurs!=2)
 			return NULL;
 
-		printf("offset: %d %d\n",offset[0],offset[1]);
+		/* printf("offset: %d %d\n",offset[0],offset[1]); */
 
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
@@ -75,7 +75,7 @@ user_content_t *new_user_content_from_str(char *in,char *header,int direction){
 		else
 			return NULL;
 
-		printf("offest[0] is %d\n",offset[0]);
+		/* printf("offest[0] is %d\n",offset[0]); */
 		
 		/* 记得释放内存 */
 		tmp=my_malloc(sizeof(user_content_t));
@@ -198,22 +198,7 @@ int sendall(user_content_t *in){
 	}else if(in->direction==DIR_TO_SERIAL){
 		
 	}else if(in->direction==DIR_TO_BLUETOOTH){
-		s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-		if(s<0){
-			printf("error in socket in sendall\n");
-			return -1;
-		}
-		// set the connection parameters (who to connect to)
-		addr.rc_family = AF_BLUETOOTH;
-		addr.rc_channel = (uint8_t) 1;
-		str2ba(in->mac, &addr.rc_bdaddr );
-
-		if(connect(s, (struct sockaddr *)&addr, sizeof(addr))<0){
-			printf("error in connect in sendall\n");
-			return -1;
-		}
 		
-		n=write(in->fd, in->data, in->data_size);
 		
 		return n;
 	}else{
@@ -248,12 +233,13 @@ int get_direction(char *in){
 // 转发包，前提是user_content要满足非NULL的条件
 int redirect_from_user_content(user_content_t *in){
 	struct addrinfo hints, *res; /* 连接到target的用到的 */
+	struct sockaddr_rc addr = { 0 }; /* 蓝牙 */
 	user_content_t *my_com_conf;
-	int n;
+	int n,s;					/* 发送字节，socket文件描述符 */
 	
 	switch (in->direction){		
 	case DIR_TO_PHONE:
-		printf("  %s    ---->  %s:%s\n",in->data,in->ip,in->port);
+		printf("  ---->  %s:%s\n",in->ip,in->port);
 		memset(&hints, 0, sizeof hints);
 		hints.ai_family = AF_UNSPEC; // AF_INET 或 AF_INET6 可以指定版本
 		hints.ai_socktype = SOCK_STREAM;
@@ -287,11 +273,31 @@ int redirect_from_user_content(user_content_t *in){
 		break;
 #ifdef MODULE_BLUETOOTH
 	case DIR_TO_BLUETOOTH:
+		printf("  ---->  %s\n",in->mac);
+		s = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+		if(s<0){
+			printf("error in socket in sendall\n");
+			return -1;
+		}
+		// set the connection parameters (who to connect to)
+		addr.rc_family = AF_BLUETOOTH;
+		addr.rc_channel = (uint8_t) 1;
+		str2ba(in->mac, &addr.rc_bdaddr );
+
+		if(connect(s, (struct sockaddr *)&addr, sizeof(addr))<0){
+			printf("error in connect in sendall\n");
+			return -1;
+		}
+
+		n=write(s, in->data, in->data_size);
+		if(n<0)return -1;
+		
 		break;
 #endif
 		
 #ifdef MODULE_SERIAL
 	case DIR_TO_SERIAL:
+		printf("  ---->  %s\n",in->device);
 		/* 打开串口，须root权限 */
 		if(NULL==(my_com_conf=open_com(in->device))){
 			printf("error open com!\n");			
