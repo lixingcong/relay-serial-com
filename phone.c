@@ -54,7 +54,7 @@ int main(int argc,char *argv[])
 		/* scanf 默认将空格视为分隔符，不能发送 */
 		/* scanf("%s",buffer); */
 		fgets(buffer,MAXLEN,stdin);
-		my_content=new_user_content_from_str(buffer,"");
+		my_content=new_user_content_from_str(buffer,"",DIR_TO_SERVER);
 		if(my_content==NULL){
 			printf("invalid packet!\n");
 			continue;
@@ -69,10 +69,10 @@ int main(int argc,char *argv[])
 			printf("getaddrinfo error!\n");
 			return 1;
 		}
-		new_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		my_content->fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
 		/* connect! */
-		if(connect(new_socket, res->ai_addr, res->ai_addrlen)<0){
+		if(connect(my_content->fd, res->ai_addr, res->ai_addrlen)<0){
 			/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 			perror("connect error");
 		}else{
@@ -82,10 +82,10 @@ int main(int argc,char *argv[])
 				printf("sendall fail.\n");
 		}
 
-
+		close(my_content->fd);
 		my_free(my_content->data);
 		my_free(my_content);
-		close(new_socket);
+
 	}
 	
 	return 0;

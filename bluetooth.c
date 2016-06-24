@@ -64,11 +64,13 @@ int main(int argc, char **argv)
 int main(){
     char buf[100];
 	user_content_t *my;
-	
+	int d;
 	
 	while(1){
 		scanf("%s",buf);
-		my=new_user_content_from_str(buf,"fuck");
+		d=get_direction(buf);
+		my=new_user_content_from_str(buf,"fuck",DIR_TO_SERVER);
+		/* my=new_user_content_from_str(buf,"fuck",d); */
 		if(my){
 			puts(my->data);
 			printf("data len is %d,datasize is %d\n",strlen(my->data),my->data_size);
@@ -84,6 +86,8 @@ int main(){
 				puts(my->device);
 				printf("dev len %d, size %d\n",strlen(my->device),sizeof(*my->device));
 				my_free(my->device);				
+			}else if(my->direction==DIR_TO_BLUETOOTH){
+				puts(my->mac);
 			}
 			my_free(my);
 		}else{

@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 					printf("- - - - - - - - - -\nread from COM ok\n");
 					buffer_com_p[buffer_com_data_size]=0;
 					/* create relay struct: from serial, to ip */
-					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename);
+					my_contents[MAXCLIENTS]=new_user_content_from_str(buffer_com,com_devicename,get_direction(buffer_com));
 					if(!my_contents[MAXCLIENTS]){
 						printf("invalid packet!\n");
 					}else{
@@ -299,12 +299,13 @@ int main(int argc, char *argv[]) {
 					sprintf(itoa_buffer,"%d",ntohs(address.sin_port));
 					header=get_header_ipv4(inet_ntoa(address.sin_addr), itoa_buffer);
 					/* create relay struct: from LAN ip, to serial */
-					my_contents[i]=new_user_content_from_str(buffer[i],header);
+					my_contents[i]=new_user_content_from_str(buffer[i],header,get_direction(buffer[i]));
 					my_free(header);
 					
 					if(!my_contents[i]){
 						printf("invalid packet!\n");					
 					}else{
+						puts(my_contents[i]->device);
 						// 输入合法性只能在打开串口时候判断！
 						// 如果用户输入/etc/ttyUSB0:xxx还是合法的，但无法打开设备
 						if(strcmp(my_contents[i]->device,com_devicename)!=0){
@@ -319,8 +320,8 @@ int main(int argc, char *argv[]) {
 						/* now relay to serial */
 						my_free(my_contents[i]->data);
 						my_free(my_contents[i]->device);
-						my_free(my_contents[i]);
 					}
+					my_free(my_contents[i]);
 						
 				}else {
 					/* 累加数据 */
