@@ -54,7 +54,7 @@ int main(int argc,char *argv[])
 		/* scanf 默认将空格视为分隔符，不能发送 */
 		/* scanf("%s",buffer); */
 		fgets(buffer,MAXLEN,stdin);
-		my_content=new_user_content_from_str(buffer,"",DIR_TO_SERVER);
+		my_content=new_user_content_from_str(buffer,"");
 		if(my_content==NULL){
 			printf("invalid packet!\n");
 			continue;
@@ -76,7 +76,7 @@ int main(int argc,char *argv[])
 			/* 这里应该返回结果 告诉来源：目标拒绝连接 */
 			perror("connect error");
 		}else{
-			if(0==sendall(new_socket,my_content))
+			if(0==sendall(my_content))
 				printf("tcp send ok!\n");
 			else
 				printf("sendall fail.\n");
