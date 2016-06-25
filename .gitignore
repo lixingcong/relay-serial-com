@@ -11,3 +11,18 @@ blue_send
 dd.txt
 .cproject
 .project
+
+# autoconf automake
+.deps/
+config.log
+config.status
+autoscan.log
+autom4te.cache/
+src/Makefile
+/Makefile
+missing
+depcomp
+compile
+install-sh
+
+
