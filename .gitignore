@@ -30,6 +30,8 @@ Makefile.in
 aclocal.m4
 configure
 Makefile
+src/Makefile
+libserialport/src/Makefile
 INSTALL
 config.guess
 config.sub
