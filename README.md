@@ -77,13 +77,15 @@
 	src/serial_recv
 	src/serial_send
 	
-## openwrt编译
+## openwrt
 
-先下载这个[Makefile]()
+先下载这个[Makefile](https://github.com/lixingcong/relay-serial-com/blob/master/openwrt/Makefile)放入到openwrt/package/relay-serial-com目录下，如果需要定制组件，编辑Makefile的CONFIGURE_ARGS变量。
 
 	# 首先准备好SDK，自行downloads.openwrt.org下载
 	cd openwrt
-	
+	make menuconfig
+	# 选择Network->relay-serial-com
+	make package/relay-serial-com/compile V=99
 
 ## 鸣谢
 
