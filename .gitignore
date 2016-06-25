@@ -25,4 +25,18 @@ depcomp
 compile
 install-sh
 
+# libtool
+Makefile.in
+aclocal.m4
+configure
+Makefile
+INSTALL
+config.guess
+config.sub
+libtool
+ltmain.sh
+.libs/
+*.la
+*.lo
+
 
