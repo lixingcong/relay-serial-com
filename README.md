@@ -22,29 +22,35 @@
 
 编译
 
-	# 编译含有串口转发和蓝牙转发的模块
-	# 若不想编译其中之一，不写它就ok
-	make serial=1 bluetooth=1
+	sh autogen.sh
+	
+	# 若不想编译模块其中之一，不写它就ok
+	./configure --enable-serial=yes --enable-bluetooth=yes
+	make
+
+主程序
+
 	# 监听4000端口
-	sudo ./main 4000
+	sudo src/main 4000
 
 运行phone_recv即可收到数据
 
 	# 监听4567端口
-	./phone_recv 127.0.0.1 4567
+	src/phone_recv 127.0.0.1 4567
 
 使用类似HTerm的串口软件测试：
 	
 	# 从串口发送数据给ip
+	# 数据包格式
 	127.0.0.1:4567:hello\r\n
 
 运行phone_send即可发送数据给串口
 
-	./phone_send 127.0.0.1 4000
+	src/phone_send 127.0.0.1 4000
 	# 从局域网ip发送给串口
 	/dev/ttyUSB0:hello\n
 	
-发送指令格式
+发送指令数据包格式
 
 	# 发给串口:：设备+消息
 	/dev/ttyUSB1:hellomessage!
@@ -66,8 +72,10 @@
 	
 测试
 
-	./blue_recv
-	./blue_send
+	src/blue_recv
+	src/blue_send
+	src/serial_recv
+	src/serial_send
 
 ## 鸣谢
 
