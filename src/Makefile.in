@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -86,11 +87,13 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
+build_triplet = @build@
+host_triplet = @host@
 @BUILD_SERIAL_TRUE@am__append_1 = -DMODULE_SERIAL
 @BUILD_BLUETOOTH_TRUE@am__append_2 = -DMODULE_BLUETOOTH
-bin_PROGRAMS = main$(EXEEXT) phone_recv$(EXEEXT) phone_send$(EXEEXT) \
-	serial_recv$(EXEEXT) serial_send$(EXEEXT) blue_recv$(EXEEXT) \
-	blue_send$(EXEEXT)
+bin_PROGRAMS = main$(EXEEXT) phone_send$(EXEEXT) phone_recv$(EXEEXT) \
+	serial_send$(EXEEXT) serial_recv$(EXEEXT) blue_send$(EXEEXT) \
+	blue_recv$(EXEEXT)
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -100,51 +103,107 @@ DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
+am__install_max = 40
+am__nobase_strip_setup = \
+  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
+am__nobase_strip = \
+  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
+am__nobase_list = $(am__nobase_strip_setup); \
+  for p in $$list; do echo "$$p $$p"; done | \
+  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
+  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
+    if (++n[$$2] == $(am__install_max)) \
+      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
+    END { for (dir in files) print dir, files[dir] }'
+am__base_list = \
+  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
+  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
+am__uninstall_files_from_dir = { \
+  test -z "$$files" \
+    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
+    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
+         $(am__cd) "$$dir" && rm -f $$files; }; \
+  }
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
+LTLIBRARIES = $(lib_LTLIBRARIES)
+am__DEPENDENCIES_1 = ../libserialport/src/libserialport.la
+libblue_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libblue_la_OBJECTS = libblue_la-bluetooth.lo
+libblue_la_OBJECTS = $(am_libblue_la_OBJECTS)
+AM_V_lt = $(am__v_lt_@AM_V@)
+am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
+am__v_lt_0 = --silent
+am__v_lt_1 = 
+libblue_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libblue_la_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+libphone_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libphone_la_OBJECTS = libphone_la-phone.lo
+libphone_la_OBJECTS = $(am_libphone_la_OBJECTS)
+libphone_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libphone_la_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+libserial_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libserial_la_OBJECTS = libserial_la-serial_server.lo
+libserial_la_OBJECTS = $(am_libserial_la_OBJECTS)
+libserial_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libserial_la_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+libutils_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libutils_la_OBJECTS = libutils_la-utils.lo
+libutils_la_OBJECTS = $(am_libutils_la_OBJECTS)
+libutils_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libutils_la_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(bin_PROGRAMS)
-am_blue_recv_OBJECTS = blue_recv-bluetooth.$(OBJEXT) \
-	blue_recv-utils.$(OBJEXT) blue_recv-serial_server.$(OBJEXT)
+am_blue_recv_OBJECTS = blue_recv-bluetooth.$(OBJEXT)
 blue_recv_OBJECTS = $(am_blue_recv_OBJECTS)
-am__DEPENDENCIES_1 =
-blue_recv_DEPENDENCIES = $(am__DEPENDENCIES_1)
-blue_recv_LINK = $(CCLD) $(blue_recv_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_blue_send_OBJECTS = blue_send-bluetooth.$(OBJEXT) \
-	blue_send-utils.$(OBJEXT) blue_send-serial_server.$(OBJEXT)
+blue_recv_DEPENDENCIES = libutils.la libserial.la
+blue_recv_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(blue_recv_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_blue_send_OBJECTS = blue_send-bluetooth.$(OBJEXT)
 blue_send_OBJECTS = $(am_blue_send_OBJECTS)
-blue_send_DEPENDENCIES = $(am__DEPENDENCIES_1)
-blue_send_LINK = $(CCLD) $(blue_send_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_main_OBJECTS = main-main.$(OBJEXT) main-utils.$(OBJEXT) \
-	main-serial_server.$(OBJEXT) main-bluetooth.$(OBJEXT)
+blue_send_DEPENDENCIES = libutils.la libserial.la
+blue_send_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(blue_send_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_main_OBJECTS = main-main.$(OBJEXT)
 main_OBJECTS = $(am_main_OBJECTS)
-main_DEPENDENCIES = $(am__DEPENDENCIES_1)
-main_LINK = $(CCLD) $(main_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-am_phone_recv_OBJECTS = phone_recv-phone.$(OBJEXT) \
-	phone_recv-utils.$(OBJEXT) phone_recv-serial_server.$(OBJEXT)
+main_DEPENDENCIES = libserial.la libblue.la libphone.la libutils.la
+main_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(main_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_phone_recv_OBJECTS = phone_recv-phone.$(OBJEXT)
 phone_recv_OBJECTS = $(am_phone_recv_OBJECTS)
-phone_recv_DEPENDENCIES = $(am__DEPENDENCIES_1)
-phone_recv_LINK = $(CCLD) $(phone_recv_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_phone_send_OBJECTS = phone_send-phone.$(OBJEXT) \
-	phone_send-utils.$(OBJEXT) phone_send-serial_server.$(OBJEXT)
+phone_recv_DEPENDENCIES = libutils.la libserial.la
+phone_recv_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(phone_recv_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_phone_send_OBJECTS = phone_send-phone.$(OBJEXT)
 phone_send_OBJECTS = $(am_phone_send_OBJECTS)
-phone_send_DEPENDENCIES = $(am__DEPENDENCIES_1)
-phone_send_LINK = $(CCLD) $(phone_send_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
-am_serial_recv_OBJECTS = serial_recv-utils.$(OBJEXT) \
-	serial_recv-serial_server.$(OBJEXT)
+phone_send_DEPENDENCIES = libutils.la libserial.la
+phone_send_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(phone_send_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_serial_recv_OBJECTS = serial_recv-serial_server.$(OBJEXT)
 serial_recv_OBJECTS = $(am_serial_recv_OBJECTS)
-serial_recv_DEPENDENCIES = $(am__DEPENDENCIES_1)
-serial_recv_LINK = $(CCLD) $(serial_recv_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-am_serial_send_OBJECTS = serial_send-utils.$(OBJEXT) \
-	serial_send-serial_server.$(OBJEXT)
+serial_recv_DEPENDENCIES = libutils.la
+serial_recv_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(serial_recv_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am_serial_send_OBJECTS = serial_send-serial_server.$(OBJEXT)
 serial_send_OBJECTS = $(am_serial_send_OBJECTS)
-serial_send_DEPENDENCIES = $(am__DEPENDENCIES_1)
-serial_send_LINK = $(CCLD) $(serial_send_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+serial_send_DEPENDENCIES = libutils.la
+serial_send_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(serial_send_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -161,33 +220,55 @@ DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(blue_recv_SOURCES) $(blue_send_SOURCES) $(main_SOURCES) \
+SOURCES = $(libblue_la_SOURCES) $(libphone_la_SOURCES) \
+	$(libserial_la_SOURCES) $(libutils_la_SOURCES) \
+	$(blue_recv_SOURCES) $(blue_send_SOURCES) $(main_SOURCES) \
 	$(phone_recv_SOURCES) $(phone_send_SOURCES) \
 	$(serial_recv_SOURCES) $(serial_send_SOURCES)
-DIST_SOURCES = $(blue_recv_SOURCES) $(blue_send_SOURCES) \
-	$(main_SOURCES) $(phone_recv_SOURCES) $(phone_send_SOURCES) \
+DIST_SOURCES = $(libblue_la_SOURCES) $(libphone_la_SOURCES) \
+	$(libserial_la_SOURCES) $(libutils_la_SOURCES) \
+	$(blue_recv_SOURCES) $(blue_send_SOURCES) $(main_SOURCES) \
+	$(phone_recv_SOURCES) $(phone_send_SOURCES) \
 	$(serial_recv_SOURCES) $(serial_send_SOURCES)
+RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
+	ctags-recursive dvi-recursive html-recursive info-recursive \
+	install-data-recursive install-dvi-recursive \
+	install-exec-recursive install-html-recursive \
+	install-info-recursive install-pdf-recursive \
+	install-ps-recursive install-recursive installcheck-recursive \
+	installdirs-recursive pdf-recursive ps-recursive \
+	tags-recursive uninstall-recursive
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
+  distclean-recursive maintainer-clean-recursive
+am__recursive_targets = \
+  $(RECURSIVE_TARGETS) \
+  $(RECURSIVE_CLEAN_TARGETS) \
+  $(am__extra_recursive_targets)
+AM_RECURSIVE_TARGETS = $(am__recursive_targets:-recursive=) TAGS CTAGS \
+	distdir
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -207,11 +288,38 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
+DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+am__relativize = \
+  dir0=`pwd`; \
+  sed_first='s,^\([^/]*\)/.*$$,\1,'; \
+  sed_rest='s,^[^/]*/*,,'; \
+  sed_last='s,^.*/\([^/]*\)$$,\1,'; \
+  sed_butlast='s,/*[^/]*$$,,'; \
+  while test -n "$$dir1"; do \
+    first=`echo "$$dir1" | sed -e "$$sed_first"`; \
+    if test "$$first" != "."; then \
+      if test "$$first" = ".."; then \
+        dir2=`echo "$$dir0" | sed -e "$$sed_last"`/"$$dir2"; \
+        dir0=`echo "$$dir0" | sed -e "$$sed_butlast"`; \
+      else \
+        first2=`echo "$$dir2" | sed -e "$$sed_first"`; \
+        if test "$$first2" = "$$first"; then \
+          dir2=`echo "$$dir2" | sed -e "$$sed_rest"`; \
+        else \
+          dir2="../$$dir2"; \
+        fi; \
+        dir0="$$dir0"/"$$first"; \
+      fi; \
+    fi; \
+    dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
+  done; \
+  reldir="$$dir2"
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -224,24 +332,39 @@ CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
+DSYMUTIL = @DSYMUTIL@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FGREP = @FGREP@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
+LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
+LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
+NM = @NM@
+NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -250,6 +373,8 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+RANLIB = @RANLIB@
+SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -258,21 +383,31 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
 bindir = @bindir@
+build = @build@
 build_alias = @build_alias@
+build_cpu = @build_cpu@
+build_os = @build_os@
+build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
+host = @host@
 host_alias = @host_alias@
+host_cpu = @host_cpu@
+host_os = @host_os@
+host_vendor = @host_vendor@
 htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
@@ -292,39 +427,66 @@ runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 VERSION_INFO = 1:0:0
-MY_COMMON_LIBS = -lserialport -lbluetooth
 MODULE_FLAGS = $(am__append_1) $(am__append_2)
-main_SOURCES = main.c utils.c serial_server.c bluetooth.c
-main_LDADD = $(MY_COMMON_LIBS)
+SUBDIRS = ../libserialport
+AM_CFLAGS = -I$(srcdir)/../libserialport/src
+MY_COMMON_LIBS = ../libserialport/src/libserialport.la -lbluetooth
+lib_LTLIBRARIES = libphone.la \
+                  libserial.la \
+                  libblue.la \
+                  libutils.la
+
+
+# phone lib
+libphone_la_SOURCES = phone.c
+libphone_la_LIBADD = $(MY_COMMON_LIBS)
+libphone_la_CFLAGS = $(MODULE_FLAGS)
+# bluelib
+libblue_la_SOURCES = bluetooth.c
+libblue_la_LIBADD = $(MY_COMMON_LIBS)
+libblue_la_CFLAGS = $(MODULE_FLAGS)
+# serial lib
+libserial_la_SOURCES = serial_server.c
+libserial_la_LIBADD = $(MY_COMMON_LIBS)
+libserial_la_CFLAGS = $(MODULE_FLAGS)
+# utils lib
+libutils_la_SOURCES = utils.c
+libutils_la_LIBADD = $(MY_COMMON_LIBS)
+libutils_la_CFLAGS = $(MODULE_FLAGS)
+
+# main listen on linux
+main_SOURCES = main.c
+main_LDADD = libserial.la libblue.la libphone.la libutils.la -lbluetooth
 main_CFLAGS = $(MODULE_FLAGS)
-phone_recv_SOURCES = phone.c utils.c serial_server.c
-phone_recv_LDADD = $(MY_COMMON_LIBS)
-phone_recv_CFLAGS = -DPHONE_RECV $(MODULE_FLAGS)
-phone_send_SOURCES = phone.c utils.c serial_server.c
-phone_send_LDADD = $(MY_COMMON_LIBS)
-phone_send_CFLAGS = -DPHONE_SEND $(MODULE_FLAGS)
-blue_recv_SOURCES = bluetooth.c utils.c serial_server.c
-blue_recv_LDADD = $(MY_COMMON_LIBS)
-blue_recv_CFLAGS = -DBLUETOOTH_RECV $(MODULE_FLAGS)
-blue_send_SOURCES = bluetooth.c utils.c serial_server.c
-blue_send_LDADD = $(MY_COMMON_LIBS)
-blue_send_CFLAGS = -DBLUETOOTH_SEND $(MODULE_FLAGS)
-serial_recv_SOURCES = utils.c serial_server.c
-serial_recv_LDADD = $(MY_COMMON_LIBS)
-serial_recv_CFLAGS = -DSERIAL_RECV $(MODULE_FLAGS)
-serial_send_SOURCES = utils.c serial_server.c
-serial_send_LDADD = $(MY_COMMON_LIBS)
-serial_send_CFLAGS = -DSERIAL_SEND $(MODULE_FLAGS)
-all: all-am
+phone_send_SOURCES = phone.c
+phone_send_LDADD = libutils.la libserial.la -lbluetooth
+phone_send_CFLAGS = -DPHONE_SEND
+phone_recv_SOURCES = phone.c
+phone_recv_LDADD = libutils.la libserial.la -lbluetooth
+phone_recv_CFLAGS = -DPHONE_RECV
+blue_send_SOURCES = bluetooth.c
+blue_send_LDADD = libutils.la libserial.la -lbluetooth
+blue_send_CFLAGS = -DBLUETOOTH_SEND
+blue_recv_SOURCES = bluetooth.c
+blue_recv_LDADD = libutils.la libserial.la -lbluetooth
+blue_recv_CFLAGS = -DBLUETOOTH_RECV
+serial_recv_SOURCES = serial_server.c
+serial_recv_LDADD = libutils.la -lbluetooth
+serial_recv_CFLAGS = -DSERIAL_RECV
+serial_send_SOURCES = serial_server.c
+serial_send_LDADD = libutils.la -lbluetooth
+serial_send_CFLAGS = -DSERIAL_SEND
+all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .o .obj
+.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -354,6 +516,53 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	list2=; for p in $$list; do \
+	  if test -f $$p; then \
+	    list2="$$list2 $$p"; \
+	  else :; fi; \
+	done; \
+	test -z "$$list2" || { \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	}
+
+uninstall-libLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	for p in $$list; do \
+	  $(am__strip_dir) \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	done
+
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; \
+	locs=`for p in $$list; do echo $$p; done | \
+	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
+	      sort -u`; \
+	test -z "$$locs" || { \
+	  echo rm -f $${locs}; \
+	  rm -f $${locs}; \
+	}
+
+libblue.la: $(libblue_la_OBJECTS) $(libblue_la_DEPENDENCIES) $(EXTRA_libblue_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libblue_la_LINK) -rpath $(libdir) $(libblue_la_OBJECTS) $(libblue_la_LIBADD) $(LIBS)
+
+libphone.la: $(libphone_la_OBJECTS) $(libphone_la_DEPENDENCIES) $(EXTRA_libphone_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libphone_la_LINK) -rpath $(libdir) $(libphone_la_OBJECTS) $(libphone_la_LIBADD) $(LIBS)
+
+libserial.la: $(libserial_la_OBJECTS) $(libserial_la_DEPENDENCIES) $(EXTRA_libserial_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libserial_la_LINK) -rpath $(libdir) $(libserial_la_OBJECTS) $(libserial_la_LIBADD) $(LIBS)
+
+libutils.la: $(libutils_la_OBJECTS) $(libutils_la_DEPENDENCIES) $(EXTRA_libutils_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libutils_la_LINK) -rpath $(libdir) $(libutils_la_OBJECTS) $(libutils_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
@@ -364,6 +573,7 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	for p in $$list; do echo "$$p $$p"; done | \
 	sed 's/$(EXEEXT)$$//' | \
 	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
 	  ; then echo "$$p"; echo "$$p"; else :; fi; \
 	done | \
 	sed -e 'p;s,.*/,,;n;h' \
@@ -378,8 +588,8 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	while read type dir files; do \
 	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
 	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
 	    } \
 	; done
 
@@ -395,7 +605,13 @@ uninstall-binPROGRAMS:
 	cd "$(DESTDIR)$(bindir)" && rm -f $$files
 
 clean-binPROGRAMS:
-	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+	@list='$(bin_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 
 blue_recv$(EXEEXT): $(blue_recv_OBJECTS) $(blue_recv_DEPENDENCIES) $(EXTRA_blue_recv_DEPENDENCIES) 
 	@rm -f blue_recv$(EXEEXT)
@@ -432,25 +648,16 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_recv-bluetooth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_recv-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_recv-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_send-bluetooth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_send-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/blue_send-utils.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main-bluetooth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libblue_la-bluetooth.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libphone_la-phone.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libserial_la-serial_server.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libutils_la-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_recv-phone.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_recv-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_recv-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_send-phone.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_send-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/phone_send-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial_recv-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial_recv-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial_send-serial_server.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/serial_send-utils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -466,6 +673,41 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
+.c.lo:
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+libblue_la-bluetooth.lo: bluetooth.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblue_la_CFLAGS) $(CFLAGS) -MT libblue_la-bluetooth.lo -MD -MP -MF $(DEPDIR)/libblue_la-bluetooth.Tpo -c -o libblue_la-bluetooth.lo `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libblue_la-bluetooth.Tpo $(DEPDIR)/libblue_la-bluetooth.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bluetooth.c' object='libblue_la-bluetooth.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libblue_la_CFLAGS) $(CFLAGS) -c -o libblue_la-bluetooth.lo `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
+
+libphone_la-phone.lo: phone.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libphone_la_CFLAGS) $(CFLAGS) -MT libphone_la-phone.lo -MD -MP -MF $(DEPDIR)/libphone_la-phone.Tpo -c -o libphone_la-phone.lo `test -f 'phone.c' || echo '$(srcdir)/'`phone.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libphone_la-phone.Tpo $(DEPDIR)/libphone_la-phone.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='phone.c' object='libphone_la-phone.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libphone_la_CFLAGS) $(CFLAGS) -c -o libphone_la-phone.lo `test -f 'phone.c' || echo '$(srcdir)/'`phone.c
+
+libserial_la-serial_server.lo: serial_server.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libserial_la_CFLAGS) $(CFLAGS) -MT libserial_la-serial_server.lo -MD -MP -MF $(DEPDIR)/libserial_la-serial_server.Tpo -c -o libserial_la-serial_server.lo `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libserial_la-serial_server.Tpo $(DEPDIR)/libserial_la-serial_server.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='libserial_la-serial_server.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libserial_la_CFLAGS) $(CFLAGS) -c -o libserial_la-serial_server.lo `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
+
+libutils_la-utils.lo: utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libutils_la_CFLAGS) $(CFLAGS) -MT libutils_la-utils.lo -MD -MP -MF $(DEPDIR)/libutils_la-utils.Tpo -c -o libutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libutils_la-utils.Tpo $(DEPDIR)/libutils_la-utils.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='libutils_la-utils.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libutils_la_CFLAGS) $(CFLAGS) -c -o libutils_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
+
 blue_recv-bluetooth.o: bluetooth.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -MT blue_recv-bluetooth.o -MD -MP -MF $(DEPDIR)/blue_recv-bluetooth.Tpo -c -o blue_recv-bluetooth.o `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_recv-bluetooth.Tpo $(DEPDIR)/blue_recv-bluetooth.Po
@@ -479,34 +721,6 @@ blue_recv-bluetooth.obj: bluetooth.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bluetooth.c' object='blue_recv-bluetooth.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -c -o blue_recv-bluetooth.obj `if test -f 'bluetooth.c'; then $(CYGPATH_W) 'bluetooth.c'; else $(CYGPATH_W) '$(srcdir)/bluetooth.c'; fi`
-
-blue_recv-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -MT blue_recv-utils.o -MD -MP -MF $(DEPDIR)/blue_recv-utils.Tpo -c -o blue_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_recv-utils.Tpo $(DEPDIR)/blue_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='blue_recv-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -c -o blue_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-blue_recv-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -MT blue_recv-utils.obj -MD -MP -MF $(DEPDIR)/blue_recv-utils.Tpo -c -o blue_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_recv-utils.Tpo $(DEPDIR)/blue_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='blue_recv-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -c -o blue_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-blue_recv-serial_server.o: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -MT blue_recv-serial_server.o -MD -MP -MF $(DEPDIR)/blue_recv-serial_server.Tpo -c -o blue_recv-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_recv-serial_server.Tpo $(DEPDIR)/blue_recv-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='blue_recv-serial_server.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -c -o blue_recv-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-
-blue_recv-serial_server.obj: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -MT blue_recv-serial_server.obj -MD -MP -MF $(DEPDIR)/blue_recv-serial_server.Tpo -c -o blue_recv-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_recv-serial_server.Tpo $(DEPDIR)/blue_recv-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='blue_recv-serial_server.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_recv_CFLAGS) $(CFLAGS) -c -o blue_recv-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
 
 blue_send-bluetooth.o: bluetooth.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -MT blue_send-bluetooth.o -MD -MP -MF $(DEPDIR)/blue_send-bluetooth.Tpo -c -o blue_send-bluetooth.o `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
@@ -522,34 +736,6 @@ blue_send-bluetooth.obj: bluetooth.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -c -o blue_send-bluetooth.obj `if test -f 'bluetooth.c'; then $(CYGPATH_W) 'bluetooth.c'; else $(CYGPATH_W) '$(srcdir)/bluetooth.c'; fi`
 
-blue_send-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -MT blue_send-utils.o -MD -MP -MF $(DEPDIR)/blue_send-utils.Tpo -c -o blue_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_send-utils.Tpo $(DEPDIR)/blue_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='blue_send-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -c -o blue_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-blue_send-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -MT blue_send-utils.obj -MD -MP -MF $(DEPDIR)/blue_send-utils.Tpo -c -o blue_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_send-utils.Tpo $(DEPDIR)/blue_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='blue_send-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -c -o blue_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-blue_send-serial_server.o: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -MT blue_send-serial_server.o -MD -MP -MF $(DEPDIR)/blue_send-serial_server.Tpo -c -o blue_send-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_send-serial_server.Tpo $(DEPDIR)/blue_send-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='blue_send-serial_server.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -c -o blue_send-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-
-blue_send-serial_server.obj: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -MT blue_send-serial_server.obj -MD -MP -MF $(DEPDIR)/blue_send-serial_server.Tpo -c -o blue_send-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/blue_send-serial_server.Tpo $(DEPDIR)/blue_send-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='blue_send-serial_server.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(blue_send_CFLAGS) $(CFLAGS) -c -o blue_send-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-
 main-main.o: main.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-main.o -MD -MP -MF $(DEPDIR)/main-main.Tpo -c -o main-main.o `test -f 'main.c' || echo '$(srcdir)/'`main.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-main.Tpo $(DEPDIR)/main-main.Po
@@ -563,48 +749,6 @@ main-main.obj: main.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='main-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
-
-main-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-utils.o -MD -MP -MF $(DEPDIR)/main-utils.Tpo -c -o main-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-utils.Tpo $(DEPDIR)/main-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='main-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-main-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-utils.obj -MD -MP -MF $(DEPDIR)/main-utils.Tpo -c -o main-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-utils.Tpo $(DEPDIR)/main-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='main-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-main-serial_server.o: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-serial_server.o -MD -MP -MF $(DEPDIR)/main-serial_server.Tpo -c -o main-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-serial_server.Tpo $(DEPDIR)/main-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='main-serial_server.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-
-main-serial_server.obj: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-serial_server.obj -MD -MP -MF $(DEPDIR)/main-serial_server.Tpo -c -o main-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-serial_server.Tpo $(DEPDIR)/main-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='main-serial_server.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-
-main-bluetooth.o: bluetooth.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-bluetooth.o -MD -MP -MF $(DEPDIR)/main-bluetooth.Tpo -c -o main-bluetooth.o `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-bluetooth.Tpo $(DEPDIR)/main-bluetooth.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bluetooth.c' object='main-bluetooth.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-bluetooth.o `test -f 'bluetooth.c' || echo '$(srcdir)/'`bluetooth.c
-
-main-bluetooth.obj: bluetooth.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -MT main-bluetooth.obj -MD -MP -MF $(DEPDIR)/main-bluetooth.Tpo -c -o main-bluetooth.obj `if test -f 'bluetooth.c'; then $(CYGPATH_W) 'bluetooth.c'; else $(CYGPATH_W) '$(srcdir)/bluetooth.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/main-bluetooth.Tpo $(DEPDIR)/main-bluetooth.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bluetooth.c' object='main-bluetooth.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(main_CFLAGS) $(CFLAGS) -c -o main-bluetooth.obj `if test -f 'bluetooth.c'; then $(CYGPATH_W) 'bluetooth.c'; else $(CYGPATH_W) '$(srcdir)/bluetooth.c'; fi`
 
 phone_recv-phone.o: phone.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -MT phone_recv-phone.o -MD -MP -MF $(DEPDIR)/phone_recv-phone.Tpo -c -o phone_recv-phone.o `test -f 'phone.c' || echo '$(srcdir)/'`phone.c
@@ -620,34 +764,6 @@ phone_recv-phone.obj: phone.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -c -o phone_recv-phone.obj `if test -f 'phone.c'; then $(CYGPATH_W) 'phone.c'; else $(CYGPATH_W) '$(srcdir)/phone.c'; fi`
 
-phone_recv-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -MT phone_recv-utils.o -MD -MP -MF $(DEPDIR)/phone_recv-utils.Tpo -c -o phone_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_recv-utils.Tpo $(DEPDIR)/phone_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='phone_recv-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -c -o phone_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-phone_recv-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -MT phone_recv-utils.obj -MD -MP -MF $(DEPDIR)/phone_recv-utils.Tpo -c -o phone_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_recv-utils.Tpo $(DEPDIR)/phone_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='phone_recv-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -c -o phone_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-phone_recv-serial_server.o: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -MT phone_recv-serial_server.o -MD -MP -MF $(DEPDIR)/phone_recv-serial_server.Tpo -c -o phone_recv-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_recv-serial_server.Tpo $(DEPDIR)/phone_recv-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='phone_recv-serial_server.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -c -o phone_recv-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-
-phone_recv-serial_server.obj: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -MT phone_recv-serial_server.obj -MD -MP -MF $(DEPDIR)/phone_recv-serial_server.Tpo -c -o phone_recv-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_recv-serial_server.Tpo $(DEPDIR)/phone_recv-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='phone_recv-serial_server.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_recv_CFLAGS) $(CFLAGS) -c -o phone_recv-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-
 phone_send-phone.o: phone.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -MT phone_send-phone.o -MD -MP -MF $(DEPDIR)/phone_send-phone.Tpo -c -o phone_send-phone.o `test -f 'phone.c' || echo '$(srcdir)/'`phone.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_send-phone.Tpo $(DEPDIR)/phone_send-phone.Po
@@ -661,48 +777,6 @@ phone_send-phone.obj: phone.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='phone.c' object='phone_send-phone.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -c -o phone_send-phone.obj `if test -f 'phone.c'; then $(CYGPATH_W) 'phone.c'; else $(CYGPATH_W) '$(srcdir)/phone.c'; fi`
-
-phone_send-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -MT phone_send-utils.o -MD -MP -MF $(DEPDIR)/phone_send-utils.Tpo -c -o phone_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_send-utils.Tpo $(DEPDIR)/phone_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='phone_send-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -c -o phone_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-phone_send-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -MT phone_send-utils.obj -MD -MP -MF $(DEPDIR)/phone_send-utils.Tpo -c -o phone_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_send-utils.Tpo $(DEPDIR)/phone_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='phone_send-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -c -o phone_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
-phone_send-serial_server.o: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -MT phone_send-serial_server.o -MD -MP -MF $(DEPDIR)/phone_send-serial_server.Tpo -c -o phone_send-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_send-serial_server.Tpo $(DEPDIR)/phone_send-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='phone_send-serial_server.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -c -o phone_send-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
-
-phone_send-serial_server.obj: serial_server.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -MT phone_send-serial_server.obj -MD -MP -MF $(DEPDIR)/phone_send-serial_server.Tpo -c -o phone_send-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/phone_send-serial_server.Tpo $(DEPDIR)/phone_send-serial_server.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='serial_server.c' object='phone_send-serial_server.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(phone_send_CFLAGS) $(CFLAGS) -c -o phone_send-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
-
-serial_recv-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -MT serial_recv-utils.o -MD -MP -MF $(DEPDIR)/serial_recv-utils.Tpo -c -o serial_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/serial_recv-utils.Tpo $(DEPDIR)/serial_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='serial_recv-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -c -o serial_recv-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-serial_recv-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -MT serial_recv-utils.obj -MD -MP -MF $(DEPDIR)/serial_recv-utils.Tpo -c -o serial_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/serial_recv-utils.Tpo $(DEPDIR)/serial_recv-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='serial_recv-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -c -o serial_recv-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
 
 serial_recv-serial_server.o: serial_server.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -MT serial_recv-serial_server.o -MD -MP -MF $(DEPDIR)/serial_recv-serial_server.Tpo -c -o serial_recv-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
@@ -718,20 +792,6 @@ serial_recv-serial_server.obj: serial_server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_recv_CFLAGS) $(CFLAGS) -c -o serial_recv-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
 
-serial_send-utils.o: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -MT serial_send-utils.o -MD -MP -MF $(DEPDIR)/serial_send-utils.Tpo -c -o serial_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/serial_send-utils.Tpo $(DEPDIR)/serial_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='serial_send-utils.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -c -o serial_send-utils.o `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
-
-serial_send-utils.obj: utils.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -MT serial_send-utils.obj -MD -MP -MF $(DEPDIR)/serial_send-utils.Tpo -c -o serial_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/serial_send-utils.Tpo $(DEPDIR)/serial_send-utils.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='utils.c' object='serial_send-utils.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -c -o serial_send-utils.obj `if test -f 'utils.c'; then $(CYGPATH_W) 'utils.c'; else $(CYGPATH_W) '$(srcdir)/utils.c'; fi`
-
 serial_send-serial_server.o: serial_server.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -MT serial_send-serial_server.o -MD -MP -MF $(DEPDIR)/serial_send-serial_server.Tpo -c -o serial_send-serial_server.o `test -f 'serial_server.c' || echo '$(srcdir)/'`serial_server.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/serial_send-serial_server.Tpo $(DEPDIR)/serial_send-serial_server.Po
@@ -746,14 +806,67 @@ serial_send-serial_server.obj: serial_server.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(serial_send_CFLAGS) $(CFLAGS) -c -o serial_send-serial_server.obj `if test -f 'serial_server.c'; then $(CYGPATH_W) 'serial_server.c'; else $(CYGPATH_W) '$(srcdir)/serial_server.c'; fi`
 
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run 'make' without going through this Makefile.
+# To change the values of 'make' variables: instead of editing Makefiles,
+# (1) if the variable is set in 'config.status', edit 'config.status'
+#     (which will cause the Makefiles to be regenerated when you run 'make');
+# (2) otherwise, pass the desired values on the 'make' command line.
+$(am__recursive_targets):
+	@fail=; \
+	if $(am__make_keepgoing); then \
+	  failcom='fail=yes'; \
+	else \
+	  failcom='exit 1'; \
+	fi; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
-tags: tags-am
+tags: tags-recursive
 TAGS: tags
 
 tags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
 	set x; \
 	here=`pwd`; \
+	if ($(ETAGS) --etags-include --version) >/dev/null 2>&1; then \
+	  include_option=--etags-include; \
+	  empty_fix=.; \
+	else \
+	  include_option=--include; \
+	  empty_fix=; \
+	fi; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test ! -f $$subdir/TAGS || \
+	      set "$$@" "$$include_option=$$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
 	$(am__define_uniq_tagged_files); \
 	shift; \
 	if test -z "$(ETAGS_ARGS)$$*$$unique"; then :; else \
@@ -766,7 +879,7 @@ tags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
 	      $$unique; \
 	  fi; \
 	fi
-ctags: ctags-am
+ctags: ctags-recursive
 
 CTAGS: ctags
 ctags-am: $(TAGS_DEPENDENCIES) $(am__tagged_files)
@@ -779,7 +892,7 @@ GTAGS:
 	here=`$(am__cd) $(top_builddir) && pwd` \
 	  && $(am__cd) $(top_srcdir) \
 	  && gtags -i $(GTAGS_ARGS) "$$here"
-cscopelist: cscopelist-am
+cscopelist: cscopelist-recursive
 
 cscopelist-am: $(am__tagged_files)
 	list='$(am__tagged_files)'; \
@@ -828,22 +941,50 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	@list='$(DIST_SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    $(am__make_dryrun) \
+	      || test -d "$(distdir)/$$subdir" \
+	      || $(MKDIR_P) "$(distdir)/$$subdir" \
+	      || exit 1; \
+	    dir1=$$subdir; dir2="$(distdir)/$$subdir"; \
+	    $(am__relativize); \
+	    new_distdir=$$reldir; \
+	    dir1=$$subdir; dir2="$(top_distdir)"; \
+	    $(am__relativize); \
+	    new_top_distdir=$$reldir; \
+	    echo " (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir="$$new_top_distdir" distdir="$$new_distdir" \\"; \
+	    echo "     am__remove_distdir=: am__skip_length_check=: am__skip_mode_fix=: distdir)"; \
+	    ($(am__cd) $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$$new_top_distdir" \
+	        distdir="$$new_distdir" \
+		am__remove_distdir=: \
+		am__skip_length_check=: \
+		am__skip_mode_fix=: \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
 check-am: all-am
-check: check-am
-all-am: Makefile $(PROGRAMS)
-installdirs:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+check: check-recursive
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
+install-binPROGRAMS: install-libLTLIBRARIES
+
+installdirs: installdirs-recursive
+installdirs-am:
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
-install-exec: install-exec-am
-install-data: install-data-am
-uninstall: uninstall-am
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 
-installcheck: installcheck-am
+installcheck: installcheck-recursive
 install-strip:
 	if test -z '$(STRIP)'; then \
 	  $(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
@@ -865,90 +1006,95 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-clean: clean-am
+clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
+	clean-libtool mostlyclean-am
 
-distclean: distclean-am
+distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
 
-dvi: dvi-am
+dvi: dvi-recursive
 
 dvi-am:
 
-html: html-am
+html: html-recursive
 
 html-am:
 
-info: info-am
+info: info-recursive
 
 info-am:
 
 install-data-am:
 
-install-dvi: install-dvi-am
+install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS
+install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
 
-install-html: install-html-am
+install-html: install-html-recursive
 
 install-html-am:
 
-install-info: install-info-am
+install-info: install-info-recursive
 
 install-info-am:
 
 install-man:
 
-install-pdf: install-pdf-am
+install-pdf: install-pdf-recursive
 
 install-pdf-am:
 
-install-ps: install-ps-am
+install-ps: install-ps-recursive
 
 install-ps-am:
 
 installcheck-am:
 
-maintainer-clean: maintainer-clean-am
+maintainer-clean: maintainer-clean-recursive
 	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
-mostlyclean: mostlyclean-am
+mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic
+mostlyclean-am: mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool
 
-pdf: pdf-am
+pdf: pdf-recursive
 
 pdf-am:
 
-ps: ps-am
+ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS
+uninstall-am: uninstall-binPROGRAMS uninstall-libLTLIBRARIES
 
-.MAKE: install-am install-strip
+.MAKE: $(am__recursive_targets) install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
-	clean-binPROGRAMS clean-generic cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic distclean-tags \
-	distdir dvi dvi-am html html-am info info-am install \
-	install-am install-binPROGRAMS install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
+.PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am check \
+	check-am clean clean-binPROGRAMS clean-generic \
+	clean-libLTLIBRARIES clean-libtool cscopelist-am ctags \
+	ctags-am distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-libLTLIBRARIES \
 	install-man install-pdf install-pdf-am install-ps \
 	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags tags-am uninstall uninstall-am \
-	uninstall-binPROGRAMS
+	installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
