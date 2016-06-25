@@ -6,12 +6,12 @@
 - 支持三网转发：蓝牙、串口、ip端口相互发送
 - 使用select模型进行多路复用
 - 基于TCP协议，不需要考虑发包顺序
-- 可移植到openwrt
+- 使用autoconf配置，可移植到openwrt
 - 对某些高大上的“物联网”项目有一定的参考意义
 
 ## 依赖
 
-串口库[libserialport](http://sigrok.org/gitweb/?p=libserialport.git)
+串口库[libserialport](http://sigrok.org/gitweb/?p=libserialport.git)(已经集成为共享库)
 
 蓝牙库[bluez](http://www.bluez.org/development/git/)
 
@@ -28,7 +28,7 @@
 	./configure --enable-serial=yes --enable-bluetooth=yes
 	make
 
-主程序
+主程序(负责包转发)
 
 	# 监听4000端口
 	sudo src/main 4000
@@ -76,7 +76,15 @@
 	src/blue_send
 	src/serial_recv
 	src/serial_send
+	
+## openwrt编译
+
+先下载这个[Makefile]()
+
+	# 首先准备好SDK，自行downloads.openwrt.org下载
+	cd openwrt
+	
 
 ## 鸣谢
 
-本项目参考了shadowsocks-libev的[tunnel.c](https://github.com/shadowsocks/shadowsocks-libev/blob/master/src/tunnel.c)作为tcp转发核心原理，还有[@silv3rm00n](https://gist.github.com/silv3rm00n/5604330)的select服务器例程。
+本项目参考了shadowsocks-libev的[tunnel.c](https://github.com/shadowsocks/shadowsocks-libev/blob/master/src/tunnel.c)作为tcp转发核心原理，还有[@silv3rm00n](https://gist.github.com/silv3rm00n/5604330)的select服务器例程。其中openwrt的编译脚本参考了[openwrt-shadowsocks](https://github.com/shadowsocks/openwrt-shadowsocks/blob/master/Makefile)的共享库创建方法。
