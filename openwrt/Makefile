@@ -47,11 +47,13 @@ CONFIGURE_ARGS += --disable-ssp
 define Package/relay-serial-com/install
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_DIR) $(1)/usr/lib/
+	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main $(1)/usr/bin/relay-serial-com
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/phone_{recv,send} $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/serial_{recv,send} $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/blue_{recv,send} $(1)/usr/bin/
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/lib*.{a,so*} $(1)/usr/lib/
+	$(INSTALL_BIN) ./files/relay-serial-com.init $(1)/etc/init.d/
 endef
 
 $(eval $(call BuildPackage,relay-serial-com))

@@ -1,0 +1,39 @@
+#!/bin/sh /etc/rc.common
+#
+# Copyright (C) 2015 OpenWrt
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+
+START=93
+STOP=15
+
+start() {
+        hciconfig hci0 up
+        hciconfig hci0 pscan
+        /usr/bin/relay-serial-com 4000 >/tmp/relay-serial-com.log 2>&1 &
+}
+
+stop() {
+        killall relay-serial-com
+}
+
+boot() {
+        until hciconfig | grep -q "hci0"; do
+                logger [relay-serial-com]: bluetooth not found
+                sleep 1
+        done
+
+        until ls /dev | grep -q "ttyUSB0"; do
+                logger [relay-serial-com]: serial com not found
+                sleep 1
+        done
+
+        start
+}
+
+restart(){
+        stop
+        start
+}
