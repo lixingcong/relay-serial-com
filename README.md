@@ -24,7 +24,9 @@
 
 ## 使用
 
-编译
+编译(for linux desktop)
+
+这个不是移植到op系统的，是供桌面环境测试用的
 
 	sh autogen.sh
 	
@@ -82,6 +84,8 @@
 	src/serial_send
 	
 ## openwrt
+
+编译(for openwrt)
 
 先下载这个[Makefile](https://github.com/lixingcong/relay-serial-com/blob/master/openwrt/Makefile)放入到openwrt/package/relay-serial-com目录下，如果需要定制组件，编辑Makefile的CONFIGURE_ARGS变量。
 
