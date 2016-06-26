@@ -87,7 +87,7 @@
 
 编译(for openwrt)
 
-先下载这个[Makefile](https://github.com/lixingcong/relay-serial-com/blob/master/openwrt/Makefile)放入到openwrt/package/relay-serial-com目录下，如果需要定制组件，编辑Makefile的CONFIGURE_ARGS变量。
+先下载这个文件夹[openwrt](https://github.com/lixingcong/relay-serial-com/blob/master/openwrt)下所有文件放入到openwrt/package/relay-serial-com目录下，如果需要定制组件，编辑Makefile的CONFIGURE_ARGS变量。
 
 	# 首先准备好SDK，自行downloads.openwrt.org下载
 	cd openwrt
